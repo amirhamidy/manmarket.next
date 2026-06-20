@@ -1,0 +1,17 @@
+
+
+
+const SearchIcon = () => {
+    return (
+        <svg id="Search_icon" data-name="Search icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g id="icon_box_background" data-name="icon box background">
+                <rect id="icon_box" data-name="icon box" width="24" height="24" rx="4" fill="none" />
+            </g>
+            <g id="Search" transform="translate(4 4)">
+                <path id="Search-2" data-name="Search" d="M8.842,15.685a6.8,6.8,0,0,0,4.188-1.444L16.791,18,18,16.791l-3.76-3.76a6.834,6.834,0,1,0-5.4,2.653Zm0-11.974A5.132,5.132,0,1,1,3.711,8.842,5.137,5.137,0,0,1,8.842,3.711Z" transform="translate(-2 -2)" fill="#757575" />
+            </g>
+        </svg>
+    )
+}
+
+export default SearchIcon

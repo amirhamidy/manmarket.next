@@ -1,0 +1,36 @@
+{
+  "name": "manmarket",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "aos": "^2.3.4",
+    "axios": "^1.13.2",
+    "clsx": "^2.1.1",
+    "embla-carousel-react": "^8.6.0",
+    "formik": "^2.4.9",
+    "framer-motion": "^12.34.3",
+    "next": "16.1.0",
+    "next-app-active-link": "^1.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-loading-skeleton": "^3.5.0",
+    "react-multi-date-picker": "^4.5.2",
+    "react-toastify": "^11.0.5",
+    "react-use": "^17.6.0",
+    "swiper": "^12.0.3",
+    "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.0",
+    "tailwindcss": "^4"
+  }
+}

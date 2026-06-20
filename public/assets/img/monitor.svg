@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- کادر سفید با گوشه گرد -->
+  <rect x="0" y="0" width="64" height="64" rx="16" ry="16" fill="#fff7f4"/>
+  
+  <!-- آیکون جدید وسط کادر -->
+  <g transform="translate(17 17) scale(2)" stroke="#ff7643" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <rect width="13" height="9" x="0.5" y="2" rx="0.5"></rect>
+    <path d="m6 11l-1 2.5M8 11l1 2.5m-5 0h6"></path>
+  </g>
+</svg>

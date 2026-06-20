@@ -1,0 +1,90 @@
+@import url('https://lib.arvancloud.ir/vazir-font/33.003/Farsi-Digits-Non-Latin/Vazirmatn-FD-NL-font-face.css');
+@import 'tailwindcss';
+
+
+@font-face {
+    font-family: 'Vazir';
+    src: url('/fonts/Vazir.woff2') format('woff2'),
+         url('/fonts/Vazir.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+body {
+  font-family: 'Vazir', sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* html {
+  background: var(--background);
+  color: var(--foreground);
+  margin: 0;
+  padding: 0;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+} */
+
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@layer components {
+  .safari-ios .safari-input {
+    font-size: 14px !important;
+    transform: scale(0.8125);
+    transform-origin: right center;
+    background: transparent;
+  }
+}
+
+.cs-in {
+  background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+}
+
+.cs-yo {
+  background: #FF0000
+}
+
+.cs-tl {
+  background-color: #229ED9;
+}
+
+.cs-fa {
+  background: #0A66C2;
+}
+
+.user-select-none {
+  user-select: none; 
+  -webkit-user-drag: none; 
+  -webkit-touch-callout: none; 
+}
+
+

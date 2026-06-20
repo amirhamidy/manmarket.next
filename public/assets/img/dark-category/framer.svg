@@ -1,0 +1,11 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- کادر سفید با گوشه گرد -->
+  <rect x="0" y="0" width="64" height="64" rx="16" ry="16" fill="#23262B"/>
+  
+  <!-- آیکون وسط کادر -->
+  <g transform="translate(16 16) scale(0.0625)" fill="none" stroke="#ff7643" stroke-linecap="round" stroke-linejoin="round" stroke-width="32">
+    <rect width="256" height="480" x="128" y="16" rx="48" ry="48" transform="rotate(-90 256 256)"></rect>
+    <path d="M16 336v-24a8 8 0 0 1 8-8h0a16 16 0 0 0 16-16v-64a16 16 0 0 0-16-16h0a8 8 0 0 1-8-8v-24"></path>
+  </g>
+</svg>

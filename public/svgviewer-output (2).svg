@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="376" height="812" viewBox="0 0 376 812">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.017" x2="0.438" y2="0.317" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#faaf93"/>
+      <stop offset="1" stop-color="#ff7643"/>
+    </linearGradient>
+  </defs>
+  <g id="splash_background" data-name="splash background" stroke="#707070" stroke-width="1" fill="url(#linear-gradient)">
+    <rect width="376" height="812" stroke="none"/>
+    <rect x="0.5" y="0.5" width="375" height="811" fill="none"/>
+  </g>
+</svg>
