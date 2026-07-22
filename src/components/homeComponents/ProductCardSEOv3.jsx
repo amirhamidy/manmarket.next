@@ -33,7 +33,7 @@ export default function ProductCardSEOv3ClientWrapper({ product }) {
   const textColor = theme === "dark" ? "text-white" : "text-[#757575]";
 
   return (
-    <Link href={`/product/item/${product.slug}`} className="no-underline">
+    <Link href={`/product/${product.slug}`} className="no-underline">
       <article
         dir="ltr"
         className={`w-[157px] rounded-[24px] shadow-[0_8px_16px_rgba(0,0,0,0.04)]

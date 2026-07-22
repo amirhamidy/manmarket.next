@@ -167,6 +167,9 @@ export default function LoanCalculator() {
       ]
     : [];
 
+  const buttonClass =
+    "flex-1 rounded-2xl px-4 py-3.5 text-sm font-bold text-white transition-transform duration-200 active:scale-[0.99] flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.12)]";
+
   return (
     <div dir="rtl" className="w-full max-w-[556px] mx-auto">
       <MainHeader />
@@ -205,7 +208,6 @@ export default function LoanCalculator() {
           exit={{ opacity: 0, y: -12 }}
           transition={{ duration: 0.2 }}
         >
-          {/* Amount Card */}
           <div
             className="rounded-3xl p-5 mb-3"
             style={{
@@ -234,7 +236,6 @@ export default function LoanCalculator() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Progress */}
             <div
               className="h-1.5 rounded-full mb-3 relative overflow-hidden"
               style={{ backgroundColor: dark ? "#2a2b2e" : "#e5e7eb" }}
@@ -246,7 +247,6 @@ export default function LoanCalculator() {
               />
             </div>
 
-            {/* Step dots */}
             <div className="flex justify-between mb-2">
               {STEPS.map((s) => (
                 <button
@@ -299,7 +299,6 @@ export default function LoanCalculator() {
             />
           </div>
 
-          {/* Result Cards */}
           {result ? (
             <div className="grid grid-cols-2 gap-2.5">
               {cards.map((card, i) => (
@@ -353,6 +352,23 @@ export default function LoanCalculator() {
               </p>
             </div>
           )}
+
+          <div className="mt-4 flex gap-2.5 mb-4">
+            <a
+              href="https://gsmpay.ir/"
+              target="_blank"
+              rel="noreferrer"
+              className={buttonClass}
+              style={{
+                background:
+                  activeBank === "blue"
+                    ?  "linear-gradient(135deg, #1652F0 0%, #4f8ef7 100%)"
+                    : "linear-gradient(135deg, #00C853 0%, #69f0ae 100%)",
+              }}
+            >
+              ثبت درخواست
+            </a>
+          </div>
         </motion.div>
       </AnimatePresence>
     </div>

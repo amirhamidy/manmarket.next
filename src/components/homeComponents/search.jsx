@@ -459,7 +459,7 @@ const SearchInputBar = () => {
                                                 animate="visible"
                                             >
                                                 <Link
-                                                    href={`/product/item/${product.slug}`}
+                                                    href={`/product/${product.slug}`}
                                                     onClick={() => setShowResults(false)}
                                                     className={clsx(
                                                         "block w-full rounded-2xl overflow-hidden transition-colors duration-200",

@@ -182,21 +182,21 @@ export default function CategoryBrandPage() {
                 >
                     <span>{selectedCategory.name}</span>
                     :
-                    <img src={selectedCategory.img} className="w-7 h-7 opacity-60" alt="" />
+                    <img src={selectedCategory.img} className="w-7 h-7 " alt="" />
                 </motion.button>
 
                 <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setDropdownBrandOpen(true)}
                     className={`flex-1 h-12 rounded-2xl flex items-center justify-center gap-2.5 text-xs font-medium transition-colors duration-200 ${isDark
-                            ? "bg-white/[0.06] text-white/80"
+                            ? "bg-white/[0.06] text-white/90"
                             : "bg-black/[0.03] text-gray-700"
                         }`}
                 >
                     {selectedBrand ? (
                         <>
                             برند :
-                            <img src={selectedBrand.image} className="w-7 h-7 object-contain" alt="" />
+                            <img src={selectedBrand.image} className={`w-7 h-7 object-contain ${isDark ? "brightness invert" : ""}`} alt="" />
                             <span className="truncate max-w-[100px]">{selectedBrand.name}</span>
                         </>
                     ) : (
@@ -229,10 +229,10 @@ export default function CategoryBrandPage() {
                                         onClick={() => handleCategorySelect(cat)}
                                         className={`flex flex-col items-center gap-2 py-3 px-2 rounded-2xl transition-opacity duration-200 ${selectedCategory.slug === cat.slug
                                                 ? "opacity-100"
-                                                : "opacity-35 hover:opacity-60"
+                                                : "opacity-45 hover:opacity-60"
                                             }`}
                                     >
-                                        <img src={cat.img} className="w-7 h-7" alt="" />
+                                        <img src={cat.img} className="w-7 h-7 " alt="" />
                                         <span className="text-[10px]  m">{cat.name}</span>
                                     </motion.button>
                                 ))}
@@ -273,11 +273,11 @@ export default function CategoryBrandPage() {
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => handleBrandSelect(brand)}
                                         className={`flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-2xl transition-opacity duration-200 ${brand.slug === selectedBrand?.slug
-                                                ? "opacity-100"
-                                                : "opacity-35 hover:opacity-60"
+                                                ? "opacity-100 "
+                                                : "opacity-40 hover:opacity-60 "
                                             }`}
                                     >
-                                        <img src={brand.image} className="w-9 h-9 object-contain" alt="" />
+                                        <img src={brand.image} className={`w-9 h-9 object-contain ${isDark ? "brightness invert " : ""}`}alt="" />
                                         <span className="text-[10px] font-medium">{brand.name}</span>
                                     </motion.button>
                                 ))}

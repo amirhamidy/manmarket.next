@@ -22,7 +22,7 @@ export default function ProductStatsBadge({ stats }) {
     const currentItem = statsData[currentIndex];
 
     return (
-        <div className="absolute bottom-[*10] left-4 w-max z-50">
+        <div className="absolute bottom-[-15%] left-4 w-max z-50">
             <div className="dark:bg-black/60 backdrop-blur-md rounded-xl px-3 py-1 flex items-center gap-2 select-none">
                 <AnimatePresence mode="wait">
                     <motion.div

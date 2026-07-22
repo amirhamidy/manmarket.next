@@ -207,7 +207,7 @@ export default function CategoryProductPage() {
 function ProductCard({ product, theme }) {
     const cleanTitle = product.brief_title || product.title;
     return (
-        <Link href={`/product/item/${product.slug}`} className="block w-full">
+        <Link href={`/product/${product.slug}`} className="block w-full">
             <article className={`w-full relative rounded-xl overflow-hidden flex flex-col items-center text-right py-3 px-2 shadow-[0_8px_16px_rgba(255,118,67,0.043)] transition-colors duration-300 ${theme === "dark" ? "bg-[#23262b]" : "bg-white"}`}>
                 {product.has_discount && (
                     <span className="absolute top-0 left-0 w-[43px] h-[27px] bg-[#ef5350] text-white text-[10px] font-normal flex items-center justify-center rounded-tl-[24px] rounded-br-[24px] select-none">10%</span>

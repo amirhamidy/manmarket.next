@@ -5,7 +5,7 @@ export default function ProductCardHorizontal({ product }) {
     if (!product) return null;
 
     return (
-        <Link href={`/product/item/${product.slug}`} className="block w-full">
+        <Link href={`/product/${product.slug}`} className="block w-full">
             <ProductCardSEOClientWrapper product={product} />
         </Link>
     );

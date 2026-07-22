@@ -35,7 +35,7 @@ export function useHeader() {
     if (pathname.startsWith("/blog/")) {
       return "جزئیات بلاگ";
     }
-    if (pathname.startsWith("/product/item/")) {
+    if (pathname.startsWith("/product/")) {
       return "جزئیات محصول";
     }
     if (titleMap[pathname]) return titleMap[pathname];

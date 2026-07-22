@@ -23,7 +23,7 @@ export default function ProductCard({ product }) {
     const displayTitle = product.brief_title || product.title || product.englishName || product.product_slug?.replaceAll('-', ' ') || "Product";
 
     return (
-        <Link href={product.slug ? `/product/item/${product.slug}` : '#'} className="block w-full">
+        <Link href={product.slug ? `/product/${product.slug}` : '#'} className="block w-full">
             <article
                 className={`w-full relative rounded-xl overflow-hidden
                 flex flex-col items-center text-right py-2 px-2
