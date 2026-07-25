@@ -69,33 +69,6 @@ export default function ContactPage() {
           <InfoRow icon={<PhoneIcon />}>۰۵۱-۴۴۶۷۲۷۲۹ || ۰۹۱۲۰۹۸۳۴۲۲</InfoRow>
           <InfoRow icon={<MailIcon />}>کد پستی: ۹۶۱۷۶۹۷۹۵۸</InfoRow>
         </div>
-
-        <hr className="border-orange-100" />
-
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-bold text-gray-800">به ما پیام دهید</h2>
-          <input
-            type="text"
-            placeholder="نام و نام خانوادگی"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7643]/40 focus:border-[#ff7643]"
-          />
-          <input
-            type="email"
-            placeholder="ایمیل"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7643]/40 focus:border-[#ff7643]"
-          />
-          <textarea
-            rows={4}
-            placeholder="پیام"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7643]/40 focus:border-[#ff7643] resize-none"
-          />
-          <button
-            style={{ background: "linear-gradient(135deg, #ff7643, #ff5722)" }}
-            className="w-full py-3 rounded-xl text-white font-semibold text-sm"
-          >
-            ارسال پیام
-          </button>
-        </div>
       </section>
     </div>
   );

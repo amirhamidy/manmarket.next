@@ -30,6 +30,11 @@ const MoreItem = () => {
       link: "/moreitem/target",
       icon: <OrderIcon />,
     },
+     {
+      text: "درباره ما",
+      link: "/moreitem/about",
+      icon: <ProfileIcon />,
+    },
     {
       text: "دانلود اپلیکیشن من مارکت",
       link: "https://myket.ir/app/ir.manmarket.app",
