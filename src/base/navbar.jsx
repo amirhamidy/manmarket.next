@@ -47,7 +47,7 @@ const Navbar = () => {
                         <HomeIcon />
                     </Link>
 
-                    <Link href="/filter" className="cursor-pointer">
+                    <Link href="/category/phone" className="cursor-pointer">
                         <SearchIcon />
                     </Link>
 
