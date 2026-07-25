@@ -37,6 +37,42 @@ const darkCategories = lightCategories.map((c) => ({
   img: c.img.replace("/assets/img/", "/assets/img/dark-category/"),
 }));
 
+const categoryBrandMapping = {
+  phone: [
+    "apple",
+    "samsung",
+    "xiaomi",
+    "huawei",
+    "honor",
+    "nokia",
+    "realme",
+    "tecno",
+    "nothing-phone",
+    "htc",
+    "lg",
+    "motorola",
+    "blackview",
+    "doogee",
+  ],
+  tablet: ["apple", "samsung", "xiaomi", "huawei", "lenovo"],
+  laptop: [
+    "apple",
+    "asus",
+    "acer",
+    "lenovo",
+    "hp",
+    "msi",
+    "dell",
+    "xiaomi",
+    "huawei",
+  ],
+  monitor: ["asus", "acer", "lenovo", "msi", "hp", "dell"],
+  "game-console": ["sony", "microsoft"],
+  speaker: ["jbl", "sony", "anker", "harman-kardon", "lg"],
+  "headset-headphones": ["jbl", "sony", "anker", "apple", "beats", "qcy"],
+  smartwatch: ["apple", "samsung", "xiaomi", "huawei", "mibro", "haylou"],
+};
+
 const BASE_URL = "https://api.manmarket.ir/product/v1";
 
 const overlayVariants = {
@@ -70,7 +106,7 @@ export default function CategoryBrandPage() {
       lightCategories.find((c) => c.slug === categorySlug) ??
       lightCategories[0],
   );
-  const [brands, setBrands] = useState([]);
+  const [allBrands, setAllBrands] = useState([]);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [products, setProducts] = useState([]);
   const [hasMore, setHasMore] = useState(false);
@@ -147,6 +183,18 @@ export default function CategoryBrandPage() {
     [getProductPrice],
   );
 
+  const getFilteredBrands = useCallback(() => {
+    const allowedSlugs = categoryBrandMapping[selectedCategory.slug] || [];
+    return allBrands.filter(
+      (brand) =>
+        allowedSlugs.includes(brand.slug) &&
+        brand.image !== null &&
+        brand.image !== "",
+    );
+  }, [allBrands, selectedCategory.slug]);
+
+  const filteredBrands = getFilteredBrands();
+
   useEffect(() => {
     AOS.init({ duration: 400, once: true, easing: "ease-out-cubic" });
   }, []);
@@ -157,35 +205,39 @@ export default function CategoryBrandPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const fetchBrands = async () => {
+    const fetchAllBrands = async () => {
       try {
-        const res = await fetch(
-          `${BASE_URL}/brand/?category=${selectedCategory.slug}`,
-        );
+        const res = await fetch(`${BASE_URL}/brand/`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (cancelled) return;
         const filtered = Array.isArray(data)
-          ? data.filter((b) => b?.image)
+          ? data.filter((b) => b?.image !== null && b?.image !== "")
           : [];
-        setBrands(filtered);
-        if (brandSlug) {
-          setSelectedBrand(filtered.find((b) => b.slug === brandSlug) ?? null);
-        } else {
-          setSelectedBrand(null);
-        }
+        setAllBrands(filtered);
       } catch {
         if (!cancelled) {
-          setBrands([]);
-          setSelectedBrand(null);
+          setAllBrands([]);
         }
       }
     };
-    fetchBrands();
+    fetchAllBrands();
     return () => {
       cancelled = true;
     };
-  }, [selectedCategory.slug, brandSlug]);
+  }, []);
+
+  useEffect(() => {
+    if (brandSlug && filteredBrands.length > 0) {
+      const foundBrand = filteredBrands.find((b) => b.slug === brandSlug);
+      setSelectedBrand(foundBrand ?? null);
+      if (!foundBrand) {
+        router.push(`/category/${selectedCategory.slug}`);
+      }
+    } else {
+      setSelectedBrand(null);
+    }
+  }, [filteredBrands, brandSlug, selectedCategory.slug, router]);
 
   const fetchProducts = useCallback(
     async (catSlug, brSlug, nextPage, sortOpt = sortOption) => {
@@ -317,7 +369,6 @@ export default function CategoryBrandPage() {
 
     let result = showUnavailable ? [...available, ...unavailable] : available;
 
-    // حذف محصولات تکراری بر اساس id
     const uniqueProducts = [];
     const seenIds = new Set();
 
@@ -360,7 +411,9 @@ export default function CategoryBrandPage() {
     setSelectedBrand(brand);
     setIsModalOpen(false);
     setModalType(null);
-    router.push(`/category/${selectedCategory.slug}/${brand.slug}`);
+    if (brand) {
+      router.push(`/category/${selectedCategory.slug}/${brand.slug}`);
+    }
   };
 
   const handleClearBrand = () => {
@@ -441,7 +494,7 @@ export default function CategoryBrandPage() {
             >
               همه برندها
             </motion.button>
-            {brands.map((brand) => (
+            {filteredBrands.map((brand) => (
               <motion.button
                 key={brand.id}
                 whileTap={{ scale: 0.95 }}
