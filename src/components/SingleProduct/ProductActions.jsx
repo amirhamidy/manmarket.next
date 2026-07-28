@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import PriceIcon from "../icons/priceIcon";
@@ -48,116 +47,165 @@ function ReviewToast({ message, show, onClose, theme }) {
   );
 }
 
+function QuantitySelector({
+  quantity,
+  onIncrease,
+  onDecrease,
+  onDelete,
+  stock,
+  loading,
+  theme,
+}) {
+  return (
+    <div className="flex items-center justify-between bg-[#f0f0f0] dark:bg-[#2c2f35] rounded-full px-2 py-0.5 min-w-[90px] h-12 flex-shrink-0">
+      <button
+        onClick={onIncrease}
+        disabled={quantity >= stock || loading}
+        className="w-8 h-8 rounded-full bg-[#FF7643] flex items-center justify-center disabled:opacity-30"
+      >
+        {loading ? (
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24">
+            <path
+              d="M12 5v14M5 12h14"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        )}
+      </button>
+      <span className="text-[#FF7643] text-[13px] font-medium min-w-[24px] text-center">
+        {quantity}
+      </span>
+      {quantity === 1 ? (
+        <button
+          onClick={onDelete}
+          disabled={loading}
+          className="w-8 h-8 rounded-full border border-[#EF5350] flex items-center justify-center disabled:opacity-30"
+        >
+          {loading ? (
+            <div className="w-4 h-4 border-2 border-[#EF5350] border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24">
+              <path
+                d="M6 7h12M9 7v12M15 7v12M8 4h8"
+                stroke="#EF5350"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={onDecrease}
+          disabled={quantity <= 1 || loading}
+          className="w-8 h-8 rounded-full border border-[#FF7643] flex items-center justify-center disabled:opacity-30"
+        >
+          {loading ? (
+            <div className="w-4 h-4 border-2 border-[#FF7643] border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24">
+              <path
+                d="M5 12h14"
+                stroke="#FF7643"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ViewCartButton({ price, quantity, theme }) {
+  const formatPrice = (price) => {
+    if (!price) return "0";
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  return (
+    <a
+      href="/profile/cart"
+      className="flex-1 h-12 flex flex-col items-center justify-center rounded-full bg-[#ff7643] text-white text-[13px] font-semibold"
+    >
+      <span>مشاهده در سبد خرید</span>
+      <span className="flex items-center text-[11px] opacity-90">
+        {formatPrice(price * quantity)}
+        <span className="mx-1 flex items-center">
+          <PriceIcon />
+        </span>
+      </span>
+    </a>
+  );
+}
+
+function AddToCartButton({ price, onClick, loading, theme }) {
+  const formatPrice = (price) => {
+    if (!price) return "0";
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      className="flex-1 h-12 flex justify-center items-center rounded-full bg-[#ff7643] text-white text-[13px] font-semibold disabled:opacity-70"
+    >
+      {loading ? (
+        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+      ) : (
+        <span className="flex items-center">
+          {formatPrice(price)}
+          <span className="mx-1 flex items-center">
+            <PriceIcon />
+          </span>
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function ProductActions({
   productslug,
-  colorId,
-  colorInventoryId,
-  onAddToCart,
-  selectedPrice,
   onAddReview,
+  cartState,
+  onAddToCart,
+  onIncrease,
+  onDecrease,
+  onDelete,
+  selectedPrice,
+  liked,
+  onLike,
+  stock,
 }) {
   const { theme } = useTheme();
   const { api, accessToken } = useAuth();
-  const { liked, loading: likeLoading, toggle } = useLike(productslug);
+  const {
+    liked: likedState,
+    loading: likeLoading,
+    toggle,
+  } = useLike(productslug);
 
   const [loading, setLoading] = useState(true);
-  const [priceLoading, setPriceLoading] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [reviewText, setReviewText] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
-  const [openInstallment, setOpenInstallment] = useState(false);
-  const [cartLoading, setCartLoading] = useState(false);
-  const dropdownRef = useRef(null);
-  const [inCart, setInCart] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    setPriceLoading(true);
-    const t = setTimeout(() => setPriceLoading(false), 300);
-    return () => clearTimeout(t);
-  }, [productslug, colorId, colorInventoryId]);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpenInstallment(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    const checkInCart = async () => {
-      if (!accessToken) return;
-      try {
-        const res = await api.get("/cart/v1/cart/");
-        if (res.status >= 200 && res.status < 300) {
-          const productInCart = res.data.cart_items.some(
-            (item) =>
-              item.product === Number(productslug) &&
-              item.color_inventory === Number(colorInventoryId),
-          );
-          setInCart(productInCart);
-        }
-      } catch (err) {
-        console.error("Error checking cart", err);
-      }
-    };
-    checkInCart();
-  }, [api, accessToken, productslug, colorInventoryId]);
-
   const triggerToast = (message) => {
     setToastMessage(message);
     setShowToast(true);
-  };
-
-  const formatPrice = (price) => {
-    if (!price) return "0";
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
-  const handleAddToCart = async () => {
-    if (!accessToken) {
-      triggerToast("برای افزودن به سبد خرید باید ورود / ثبت نام کنید");
-      return;
-    }
-
-    if (!productslug || !colorId || !colorInventoryId) {
-      triggerToast("لطفاً رنگ محصول را انتخاب کنید");
-      return;
-    }
-
-    setCartLoading(true);
-
-    const payload = {
-      product: Number(productslug),
-      color: Number(colorId),
-      color_inventory: Number(colorInventoryId),
-      quantity: 1,
-    };
-
-    try {
-      const res = await api.post("/cart/v1/cart/add-product/", payload);
-
-      if (res.status >= 200 && res.status < 300) {
-        triggerToast("محصول با موفقیت به سبد خرید اضافه شد");
-        setInCart(true);
-        onAddToCart?.(payload);
-      } else {
-        triggerToast("خطا در افزودن به سبد خرید");
-      }
-    } catch (error) {
-      console.error("❌ CART ERROR:", error);
-      triggerToast("خطا در افزودن به سبد خرید");
-    } finally {
-      setCartLoading(false);
-    }
   };
 
   const handleReviewSubmit = async () => {
@@ -197,6 +245,10 @@ export default function ProductActions({
     toggle();
   };
 
+  const isInCart = cartState?.stage === "added";
+  const isOutOfStock = selectedPrice <= 0 || !selectedPrice || stock === 0;
+  const isLoading = cartState?.loading || false;
+
   return (
     <>
       {!loading && (
@@ -218,7 +270,7 @@ export default function ProductActions({
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setIsReviewOpen(true)}
-              className="w-10 h-10 rounded-xl bg-[#ff7643] flex items-center justify-center"
+              className="w-10 h-10 rounded-xl bg-[#ff7643] flex items-center justify-center flex-shrink-0"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -238,11 +290,11 @@ export default function ProductActions({
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={handleLike}
-              className="w-10 h-10 rounded-xl bg-[#ff7643] flex items-center justify-center"
+              className="w-10 h-10 rounded-xl bg-[#ff7643] flex items-center justify-center flex-shrink-0"
             >
               {likeLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : liked ? (
+              ) : likedState  ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -271,68 +323,40 @@ export default function ProductActions({
               )}
             </motion.button>
 
-            {/* <div className="relative flex-1" ref={dropdownRef}>
-                            <motion.button
-                                whileTap={{ scale: 0.99 }}
-                                onClick={() => setOpenInstallment((v) => !v)}
-                                className="w-full h-12 rounded-full bg-[#ff7643] text-white flex justify-center items-center gap-2 text-[13px] font-semibold"
-                            >
-                                خرید اقساطی
-                            </motion.button>
-
-                            <AnimatePresence>
-                                {openInstallment && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ type: "spring", stiffness: 260, damping: 26 }}
-                                        className="absolute bottom-[110%] w-full bg-white dark:bg-[#23262b] rounded-xl shadow-md p-3 z-50"
-                                    >
-                                        <p className={`text-sm ${theme === "dark" ? "text-white" : "text-black"}`}>
-                                            تیم ما در حال توسعه این بخش هست , از صبر و شکیبایی شما سپاسگزاریم
-                                        </p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div> */}
-
-            <motion.div whileTap={{ scale: 0.99 }} className="flex-1">
-              {cartLoading || priceLoading ? (
-                <button
-                  disabled
-                  className="w-full h-12 flex justify-center items-center rounded-full bg-[#ff7643] text-white text-[13px] font-semibold opacity-70 cursor-not-allowed"
-                >
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                </button>
-              ) : inCart ? (
-                <a
-                  href="/profile/cart"
-                  className="w-full h-12 flex justify-center items-center rounded-full bg-[#ff7643] text-white text-[13px] font-semibold"
-                >
-                  مشاهده در سبد خرید
-                </a>
-              ) : Number(selectedPrice) <= 0 ? (
+            <div className="flex-1 flex gap-2 items-center">
+              {isOutOfStock ? (
                 <button
                   disabled
                   className="w-full h-12 flex justify-center items-center rounded-full bg-[#ff7643] text-white text-[13px] font-semibold opacity-70 cursor-not-allowed"
                 >
                   ناموجود
                 </button>
+              ) : isInCart ? (
+                <>
+                  <QuantitySelector
+                    quantity={cartState.quantity}
+                    onIncrease={onIncrease}
+                    onDecrease={onDecrease}
+                    onDelete={onDelete}
+                    stock={stock}
+                    loading={isLoading}
+                    theme={theme}
+                  />
+                  <ViewCartButton
+                    price={selectedPrice}
+                    quantity={cartState.quantity}
+                    theme={theme}
+                  />
+                </>
               ) : (
-                <button
-                  onClick={handleAddToCart}
-                  className="w-full h-12 flex justify-center items-center rounded-full bg-[#ff7643] text-white text-[13px] font-semibold"
-                >
-                  <span className="flex items-center">
-                    {formatPrice(selectedPrice)}
-                    <span className="mx-1 flex items-center">
-                      <PriceIcon />
-                    </span>
-                  </span>
-                </button>
+                <AddToCartButton
+                  price={selectedPrice}
+                  onClick={onAddToCart}
+                  loading={isLoading}
+                  theme={theme}
+                />
               )}
-            </motion.div>
+            </div>
           </>
         )}
       </section>

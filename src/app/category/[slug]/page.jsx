@@ -426,7 +426,9 @@ export default function CategoryBrandPage() {
   const handlePriceThumb = (index, val) => {
     const max = dynamicMaxPrice || 0;
     const next = [...tempRange];
-    const value = Number(val);
+    // Round to nearest 500,000
+    const roundedValue = Math.round(Number(val) / 500000) * 500000;
+    const value = roundedValue;
     if (index === 0) {
       next[0] = Math.min(value, Math.max(0, next[1] - 1));
     } else {
@@ -540,6 +542,7 @@ export default function CategoryBrandPage() {
                 type="range"
                 min="0"
                 max={dynamicMaxPrice || 0}
+                step="500000"
                 value={tempRange[0]}
                 onChange={(e) => handlePriceThumb(0, e.target.value)}
                 className="absolute w-full h-1.5 appearance-none bg-transparent pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#ff7643]"
@@ -548,6 +551,7 @@ export default function CategoryBrandPage() {
                 type="range"
                 min="0"
                 max={dynamicMaxPrice || 0}
+                step="500000"
                 value={tempRange[1]}
                 onChange={(e) => handlePriceThumb(1, e.target.value)}
                 className="absolute w-full h-1.5 appearance-none bg-transparent pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#ff7643]"
