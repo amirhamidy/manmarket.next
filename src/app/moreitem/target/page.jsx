@@ -1,40 +1,7 @@
-"use client"
+"use client";
+
 import MainHeader from "@/base/mainHeader";
-
-export default function GoalsPage() {
-  return (
-    <main
-      style={{ maxWidth: "556px" }}
-      className="mx-auto flex flex-col "
-      dir="rtl"
-    >
-      <MainHeader />
-
-      <p className="my-1   text-sm leading-7 text-gray-700">
-        در من مارکت، هدف ما تنها فروش کالا نیست؛ ما به‌دنبال خلق تجربه‌ای
-        لذت‌بخش، مطمئن و دوستانه در فرآیند خرید آنلاین هستیم. تیم پشتیبانی و
-        مدیریتی ما با چشم‌اندازی بلندمدت و برنامه‌ریزی دقیق، مسیر توسعه فروشگاه
-        را به‌گونه‌ای ترسیم کرده‌اند که اعتماد، وفاداری و رضایت مشتریان، در مرکز
-        آن قرار داشته باشد.
-      </p>
-
-      <p className="my-1   text-sm leading-7 text-gray-700">
-        ما باور داریم که موفقیت پایدار فقط با رضایت واقعی مشتریان و تبدیل آن‌ها
-        به مشتریان وفادار و در نهایت مشتریان طرفدار به دست می‌آید.
-      </p>
-
-      <h5 className="text-base font-semibold   my-1">
-        مهم‌ترین اهداف و اصول کاری ما در من مارکت:
-      </h5>
-
-      {goals.map((goal, index) => (
-        <p key={index} className="my-1   text-sm leading-7 text-gray-700">
-          {goal}
-        </p>
-      ))}
-    </main>
-  );
-}
+import { useTheme } from "@/context/ThemeContext";
 
 const goals = [
   "ارائه‌ی اطلاعات دقیق، کامل و به‌روز از کلیه محصولات",
@@ -52,3 +19,60 @@ const goals = [
   "تلاش مداوم برای بهبود تجربه کاربری و ارتقاء کیفیت خدمات",
   "در من مارکت ما به آینده فکر می‌کنیم؛ آینده‌ای که در آن، مشتریان نه فقط خریدار، بلکه همراهان همیشگی ما باشند.",
 ];
+
+export default function GoalsPage() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <main
+      style={{ maxWidth: "556px" }}
+      className={`mx-auto flex flex-col min-h-screen px-4 ${
+        isDark ? "bg-[#000] text-gray-100" : "bg-white text-gray-900"
+      }`}
+      dir="rtl"
+    >
+      <MainHeader />
+
+      <p
+        className={`my-1 text-sm leading-7 ${
+          isDark ? "text-gray-300" : "text-gray-700"
+        }`}
+      >
+        در من مارکت، هدف ما تنها فروش کالا نیست؛ ما به‌دنبال خلق تجربه‌ای
+        لذت‌بخش، مطمئن و دوستانه در فرآیند خرید آنلاین هستیم. تیم پشتیبانی و
+        مدیریتی ما با چشم‌اندازی بلندمدت و برنامه‌ریزی دقیق، مسیر توسعه فروشگاه
+        را به‌گونه‌ای ترسیم کرده‌اند که اعتماد، وفاداری و رضایت مشتریان، در مرکز
+        آن قرار داشته باشد.
+      </p>
+
+      <p
+        className={`my-1 text-sm leading-7 ${
+          isDark ? "text-gray-300" : "text-gray-700"
+        }`}
+      >
+        ما باور داریم که موفقیت پایدار فقط با رضایت واقعی مشتریان و تبدیل آن‌ها
+        به مشتریان وفادار و در نهایت مشتریان طرفدار به دست می‌آید.
+      </p>
+
+      <h5
+        className={`text-base font-semibold my-1 ${
+          isDark ? "text-gray-100" : "text-gray-900"
+        }`}
+      >
+        مهم‌ترین اهداف و اصول کاری ما در من مارکت:
+      </h5>
+
+      {goals.map((goal, index) => (
+        <p
+          key={index}
+          className={`my-1 text-sm leading-7 ${
+            isDark ? "text-gray-300" : "text-gray-700"
+          }`}
+        >
+          {goal}
+        </p>
+      ))}
+    </main>
+  );
+}

@@ -48,12 +48,15 @@ const tabs = [
 
 function OrdersTabs({ activeTab, onChange }) {
   const { theme } = useTheme();
-  const activeBg = theme === "dark" ? "rgb(26, 26, 26)" : "#ededed";
+  const activeBg = theme === "dark" ? "#23262B" : "#ededed";
   const activeText = theme === "dark" ? "text-white" : "text-[#757575]";
   const inactiveText = theme === "dark" ? "text-gray-400" : "text-[#c7c7c7]";
 
   return (
-    <div dir="rtl" className="w-full mt-2 py-4">
+    <div
+      dir="rtl"
+      className={`w-full mt-2 py-4 ${theme === "dark" ? "bg-[#000]" : "bg-white"}`}
+    >
       <Swiper
         slidesPerView="auto"
         spaceBetween={8}
@@ -134,8 +137,9 @@ function OrderItem({ order }) {
               <div
                 key={idx}
                 className={`flex items-center gap-3 p-2 rounded-2xl ${
-                  theme === "dark" ? "bg-gray-800" : "bg-gray-50"
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-55"
                 }`}
+                style={theme === "dark" ? {} : { backgroundColor: "#f9fafb" }}
               >
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                   <Image
@@ -173,7 +177,9 @@ function OrderItem({ order }) {
           </div>
         )}
 
-        <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div
+          className={`flex justify-between items-center pt-2 border-t ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}
+        >
           <span className={`text-[13px] font-bold ${textColor}`}>
             {parseInt(order.total_price).toLocaleString("fa-IR")} تومان
           </span>
@@ -200,9 +206,8 @@ export default function OrdersPage() {
       try {
         const res = await api.get("/dashboard/v1/user/order/");
         if (res.status >= 200 && res.status < 300) {
-            console.log(res.data.results[0])
+          console.log(res.data.results[0]);
           setOrders(res.data.results || []);
-          
         }
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -236,13 +241,17 @@ export default function OrdersPage() {
         });
 
   return (
-    <div className="flex justify-center">
+    <div
+      className={`flex justify-center ${theme === "dark" ? "bg-[#000]" : "bg-white"}`}
+    >
       <div className="flex flex-col min-h-screen w-full max-w-[556px]">
         <MainHeader />
 
         <OrdersTabs activeTab={activeTab} onChange={setActiveTab} />
 
-        <main className="flex-1 w-full max-w-[556px] flex flex-col items-center py-5 px-4 mx-auto bg-[#ededed] dark:bg-[#1a1a1a]">
+        <main
+          className={`flex-1 w-full max-w-[556px] flex flex-col items-center py-5 px-4 mx-auto transition-colors ${theme === "dark" ? "bg-[#1a1a1a]" : "bg-[#ededed]"}`}
+        >
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <OrderItemSkeleton key={i} />
@@ -269,12 +278,14 @@ export default function OrdersPage() {
                     id="Path_737"
                     data-name="Path 737"
                     d="M18,6.762a.768.768,0,0,0-.023-.171c-.006-.02-.017-.039-.024-.059a.838.838,0,0,0-.056-.132c-.013-.022-.03-.039-.046-.06a.792.792,0,0,0-.082-.1c-.018-.018-.042-.032-.062-.049a.813.813,0,0,0-.1-.075s-.007,0-.011,0l-.006,0L10.406,2.11a.8.8,0,0,0-.776,0L2.412,6.1a.044.044,0,0,1-.009.008l-.008,0a.862.862,0,0,0-.075.058.854.854,0,0,0-.085.066.792.792,0,0,0-.063.082.786.786,0,0,0-.063.083.761.761,0,0,0-.047.111.541.541,0,0,0-.033.08.78.78,0,0,0-.023.168C2,6.774,2,6.786,2,6.8H2v6.4a.8.8,0,0,0,.412.7L9.6,17.892h0l.016.009a.78.78,0,0,0,.108.043.654.654,0,0,0,.078.031A.81.81,0,0,0,10,18a.833.833,0,0,0,.2-.026.785.785,0,0,0,.078-.031.691.691,0,0,0,.108-.043l.016-.009h0l7.183-3.99a.8.8,0,0,0,.41-.7V6.8h0C18,6.787,18,6.776,18,6.762ZM9.978,9.9,4.447,6.806l2.21-1.223,5.468,3.124Zm.038-6.176L15.554,6.8l-1.8,1L8.294,4.677ZM3.6,8.166,9.2,11.3v4.544L3.6,12.732Zm7.2,7.677,0-4.544,2.4-1.343V12.4l1.6-.8V9.062l1.6-.9v4.564Z"
-                    fill="#757575"
+                    fill={theme === "dark" ? "#a3a3a3" : "#757575"}
                   />
                 </g>
               </svg>
               <h2 className="text-[18px] font-bold mt-6">سفارشی یافت نشد</h2>
-              <p className="text-[13px] text-gray-500">
+              <p
+                className={`text-[13px] ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}
+              >
                 در این بخش سفارشی وجود ندارد
               </p>
             </div>

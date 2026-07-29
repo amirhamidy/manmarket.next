@@ -130,6 +130,12 @@ export default function CategoryBrandPage() {
     { value: "most_popular", label: "محبوب‌ترین" },
   ];
 
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  const [brandLoading, setBrandLoading] = useState(false);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [sortLoading, setSortLoading] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(false);
+
   const getSortParam = (option) => {
     switch (option) {
       case "most_expensive":
@@ -278,7 +284,14 @@ export default function CategoryBrandPage() {
       } catch {
         if (fetchId === fetchIdRef.current) setHasMore(false);
       } finally {
-        if (fetchId === fetchIdRef.current) setLoading(false);
+        if (fetchId === fetchIdRef.current) {
+          setLoading(false);
+          setCategoryLoading(false);
+          setBrandLoading(false);
+          setPriceLoading(false);
+          setSortLoading(false);
+          setToggleLoading(false);
+        }
       }
     },
     [sortOption, sortProductsClient],
@@ -395,6 +408,7 @@ export default function CategoryBrandPage() {
       setModalType(null);
       return;
     }
+    setCategoryLoading(true);
     setSelectedCategory(cat);
     setSelectedBrand(null);
     setIsModalOpen(false);
@@ -408,6 +422,7 @@ export default function CategoryBrandPage() {
       setModalType(null);
       return;
     }
+    setBrandLoading(true);
     setSelectedBrand(brand);
     setIsModalOpen(false);
     setModalType(null);
@@ -417,6 +432,7 @@ export default function CategoryBrandPage() {
   };
 
   const handleClearBrand = () => {
+    setBrandLoading(true);
     setSelectedBrand(null);
     setIsModalOpen(false);
     setModalType(null);
@@ -426,7 +442,6 @@ export default function CategoryBrandPage() {
   const handlePriceThumb = (index, val) => {
     const max = dynamicMaxPrice || 0;
     const next = [...tempRange];
-    // Round to nearest 500,000
     const roundedValue = Math.round(Number(val) / 500000) * 500000;
     const value = roundedValue;
     if (index === 0) {
@@ -443,6 +458,7 @@ export default function CategoryBrandPage() {
       setModalType(null);
       return;
     }
+    setSortLoading(true);
     setSortOption(option);
     setIsModalOpen(false);
     setModalType(null);
@@ -460,6 +476,14 @@ export default function CategoryBrandPage() {
 
   const categories = theme === "dark" ? darkCategories : lightCategories;
   const isDark = theme === "dark";
+
+  const isAnyFilterLoading =
+    categoryLoading ||
+    brandLoading ||
+    priceLoading ||
+    sortLoading ||
+    toggleLoading ||
+    loading;
 
   const getModalContent = () => {
     switch (modalType) {
@@ -577,13 +601,18 @@ export default function CategoryBrandPage() {
             </div>
             <button
               onClick={() => {
+                setPriceLoading(true);
                 setPriceRange(tempRange);
                 setPriceDirty(true);
                 closeModal();
               }}
-              className="w-full h-12 bg-[#ff7643] text-white rounded-2xl text-xs font-bold"
+              className="w-full h-12 bg-[#ff7643] text-white rounded-2xl text-xs font-bold flex items-center justify-center"
             >
-              اعمال فیلتر
+              {priceLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                "اعمال فیلتر"
+              )}
             </button>
           </div>
         );
@@ -650,7 +679,7 @@ export default function CategoryBrandPage() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => openModal("category")}
-              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-1 whitespace-nowrap ${
+              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-1 whitespace-nowrap min-w-[70px] justify-center ${
                 true
                   ? "bg-[#ff7643] text-white "
                   : isDark
@@ -658,23 +687,29 @@ export default function CategoryBrandPage() {
                     : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
               }`}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-              </svg>
-              <span>دسته‌بندی</span>:
-              <span className=" ">{selectedCategory.name}</span>
+              {categoryLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </svg>
+                  <span>دسته‌بندی</span>:
+                  <span className=" ">{selectedCategory.name}</span>
+                </>
+              )}
             </motion.button>
           </SwiperSlide>
 
@@ -682,7 +717,7 @@ export default function CategoryBrandPage() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => openModal("brand")}
-              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap min-w-[70px] justify-center ${
                 selectedBrand
                   ? "bg-[#ff7643] text-white "
                   : isDark
@@ -690,26 +725,32 @@ export default function CategoryBrandPage() {
                     : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
               }`}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 4L20 4" />
-                <path d="M8 8L16 8" />
-                <path d="M4 12L20 12" />
-                <path d="M8 16L16 16" />
-                <path d="M4 20L20 20" />
-              </svg>
-              <span>برند</span>
-              <span className="text-[9px] ">
-                {selectedBrand ? selectedBrand.name : ""}
-              </span>
+              {brandLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 4L20 4" />
+                    <path d="M8 8L16 8" />
+                    <path d="M4 12L20 12" />
+                    <path d="M8 16L16 16" />
+                    <path d="M4 20L20 20" />
+                  </svg>
+                  <span>برند</span>
+                  <span className="text-[9px] ">
+                    {selectedBrand ? selectedBrand.name : ""}
+                  </span>
+                </>
+              )}
             </motion.button>
           </SwiperSlide>
 
@@ -717,7 +758,7 @@ export default function CategoryBrandPage() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => openModal("price")}
-              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap min-w-[70px] justify-center ${
                 priceDirty
                   ? "bg-[#ff7643] text-white "
                   : isDark
@@ -725,29 +766,35 @@ export default function CategoryBrandPage() {
                     : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
               }`}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="4" y1="21" x2="4" y2="14" />
-                <line x1="4" y1="10" x2="4" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12" y2="3" />
-                <line x1="20" y1="21" x2="20" y2="16" />
-                <line x1="20" y1="12" x2="20" y2="3" />
-                <line x1="2" y1="14" x2="6" y2="14" />
-                <line x1="10" y1="8" x2="14" y2="8" />
-                <line x1="18" y1="16" x2="22" y2="16" />
-              </svg>
-              <span>قیمت</span>
-              {priceDirty && (
-                <span className="w-1.5 h-1.5 bg-white rounded-full" />
+              {priceLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="4" y1="21" x2="4" y2="14" />
+                    <line x1="4" y1="10" x2="4" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12" y2="3" />
+                    <line x1="20" y1="21" x2="20" y2="16" />
+                    <line x1="20" y1="12" x2="20" y2="3" />
+                    <line x1="2" y1="14" x2="6" y2="14" />
+                    <line x1="10" y1="8" x2="14" y2="8" />
+                    <line x1="18" y1="16" x2="22" y2="16" />
+                  </svg>
+                  <span>قیمت</span>
+                  {priceDirty && (
+                    <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                  )}
+                </>
               )}
             </motion.button>
           </SwiperSlide>
@@ -756,7 +803,7 @@ export default function CategoryBrandPage() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => openModal("sort")}
-              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap min-w-[70px] justify-center ${
                 sortOption !== "default"
                   ? "bg-[#ff7643] text-white "
                   : isDark
@@ -764,32 +811,42 @@ export default function CategoryBrandPage() {
                     : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
               }`}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="12" y1="3" x2="12" y2="21" />
-                <polyline points="8 17 12 21 16 17" />
-                <polyline points="6 7 10 3 14 3 18 7" />
-              </svg>
-              <span>مرتب‌سازی</span>:
-              <span className="">
-                {sortOptions.find((s) => s.value === sortOption)?.label}
-              </span>
+              {sortLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="12" y1="3" x2="12" y2="21" />
+                    <polyline points="8 17 12 21 16 17" />
+                    <polyline points="6 7 10 3 14 3 18 7" />
+                  </svg>
+                  <span>مرتب‌سازی</span>:
+                  <span className="">
+                    {sortOptions.find((s) => s.value === sortOption)?.label}
+                  </span>
+                </>
+              )}
             </motion.button>
           </SwiperSlide>
 
           <SwiperSlide className="!w-auto">
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowUnavailable((prev) => !prev)}
-              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+              onClick={() => {
+                setToggleLoading(true);
+                setShowUnavailable((prev) => !prev);
+                setTimeout(() => setToggleLoading(false), 500);
+              }}
+              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap min-w-[70px] justify-center ${
                 !showUnavailable
                   ? "bg-[#ff7643] text-white"
                   : isDark
@@ -797,23 +854,29 @@ export default function CategoryBrandPage() {
                     : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
               }`}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-                {!showUnavailable && (
-                  <line x1="1" y1="1" x2="23" y2="23" strokeWidth="2.5" />
-                )}
-              </svg>
-              <span>{showUnavailable ? "نمایش همه" : "فقط موجود"}</span>
+              {toggleLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                    {!showUnavailable && (
+                      <line x1="1" y1="1" x2="23" y2="23" strokeWidth="2.5" />
+                    )}
+                  </svg>
+                  <span>{showUnavailable ? "نمایش همه" : "فقط موجود"}</span>
+                </>
+              )}
             </motion.button>
           </SwiperSlide>
         </Swiper>
@@ -857,27 +920,28 @@ export default function CategoryBrandPage() {
       </AnimatePresence>
 
       <div className="w-full max-w-[556px] grid grid-cols-2 gap-3 mt-6 px-4">
-        {!loading && filteredProducts.length === 0 && (
+        {!isAnyFilterLoading && filteredProducts.length === 0 && (
           <div className="col-span-2 text-center py-16 text-sm opacity-40 font-medium">
             محصولی یافت نشد
           </div>
         )}
 
-        {filteredProducts.map((product, index) => (
-          <div
-            key={`${product.id}-${index}`}
-            data-aos="fade-up"
-            data-aos-delay={Math.min((index % 6) * 50, 250)}
-          >
-            <ProductCard
-              product={product}
-              theme={theme}
-              isUnavailable={isProductUnavailable(product)}
-            />
-          </div>
-        ))}
+        {!isAnyFilterLoading &&
+          filteredProducts.map((product, index) => (
+            <div
+              key={`${product.id}-${index}`}
+              data-aos="fade-up"
+              data-aos-delay={Math.min((index % 6) * 50, 250)}
+            >
+              <ProductCard
+                product={product}
+                theme={theme}
+                isUnavailable={isProductUnavailable(product)}
+              />
+            </div>
+          ))}
 
-        {loading &&
+        {isAnyFilterLoading &&
           Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}

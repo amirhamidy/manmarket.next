@@ -24,12 +24,22 @@ const darkCategories = lightCategories.map(c => ({
     img: c.img.replace("/assets/img/", "/assets/img/dark-category/")
 }));
 
-const ALLOWED_BRANDS = ["apple", "samsung", "xiaomi"];
+const categoryBrandMapping = {
+    phone: ["apple", "samsung", "xiaomi", ],
+    tablet: ["apple", "samsung", "xiaomi", ],
+    laptop: ["apple", "asus", "acer", "lenovo", "hp", "msi", "dell", "xiaomi", "huawei"],
+    monitor: ["asus", "acer", "lenovo", "msi", "hp", "dell"],
+    "game-console": ["sony", "microsoft"],
+    speaker: ["jbl", "sony", "anker"],
+    "headset-headphones": ["jbl", "sony", "anker", "apple", "beats", "qcy"],
+    smartwatch: ["apple", "samsung", "xiaomi", "huawei", "mibro", "haylou"],
+};
 
 export default function CategoryList() {
     const { theme } = useTheme();
     const router = useRouter();
-    const categories = theme === "dark" ? darkCategories : lightCategories;
+    const isDark = theme === "dark";
+    const categories = isDark ? darkCategories : lightCategories;
     const [activeCategory, setActiveCategory] = useState(null);
     const [brands, setBrands] = useState({});
     const [loading, setLoading] = useState({});
@@ -37,20 +47,25 @@ export default function CategoryList() {
     const fetchBrands = async slug => {
         if (brands[slug]) return;
         setLoading(p => ({ ...p, [slug]: true }));
-        const res = await fetch("https://api.manmarket.ir/product/v1/brand/");
-        const data = await res.json();
-        const filtered = data.filter(
-            b => b.image && ALLOWED_BRANDS.includes(b.slug.toLowerCase())
-        );
-        setBrands(p => ({ ...p, [slug]: filtered }));
-        setLoading(p => ({ ...p, [slug]: false }));
+        try {
+            const res = await fetch("https://api.manmarket.ir/product/v1/brand/");
+            const data = await res.json();
+            const allowedSlugs = categoryBrandMapping[slug] || [];
+            const filtered = data.filter(
+                b => b.image && allowedSlugs.includes(b.slug.toLowerCase())
+            ).slice(0, 3);
+            setBrands(p => ({ ...p, [slug]: filtered }));
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(p => ({ ...p, [slug]: false }));
+        }
     };
 
     return (
-        <section className={`w-full max-w-[556px] mx-auto pb-16 ${theme === "dark" ? "bg-black" : "bg-white"}`}>
+        <section className={`w-full max-w-[556px] mx-auto pb-16 min-h-screen ${isDark ? "bg-[#0a0a0a]" : ""}`}>
             <CategoryHeader />
-
-            <section className="mt-3 space-y-2">
+            <section className="mt-3 space-y-2 px-4">
                 {categories.map(cat => (
                     <div key={cat.slug}>
                         <CategoryItem
@@ -61,7 +76,6 @@ export default function CategoryList() {
                                 fetchBrands(cat.slug);
                             }}
                         />
-
                         <AnimatePresence initial={false}>
                             {activeCategory === cat.slug && (
                                 <motion.div
@@ -71,29 +85,26 @@ export default function CategoryList() {
                                     transition={{ duration: 0.3 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="grid grid-cols-2 gap-3 mt-3">
+                                    <div className="grid grid-cols-2 gap-3 mt-3 mb-4">
                                         {brands[cat.slug]?.map(brand => (
                                             <BrandCard
                                                 key={brand.id}
                                                 img={brand.image}
-                                                title={brand.title}
+                                                title={brand.name}
                                                 theme={theme}
-                                                onClick={() =>
-                                                    router.push(`/category/${cat.slug}/${brand.slug}`)
-                                                }
+                                                onClick={() => router.push(`/category/${cat.slug}/${brand.slug}`)}
                                             />
                                         ))}
-
-                                        <BrandCard
-                                            title="همه برندها"
-                                            theme={theme}
-                                            onClick={() =>
-                                                router.push(`/category/${cat.slug}`)
-                                            }
-                                        />
-
+                                        {!loading[cat.slug] && (
+                                            <BrandCard
+                                                title="همه برندها"
+                                                theme={theme}
+                                                isAll={true}
+                                                onClick={() => router.push(`/category/${cat.slug}`)}
+                                            />
+                                        )}
                                         {loading[cat.slug] &&
-                                            Array.from({ length: 3 }).map((_, i) => (
+                                            Array.from({ length: 4 }).map((_, i) => (
                                                 <SkeletonCard key={i} theme={theme} />
                                             ))}
                                     </div>
@@ -103,26 +114,34 @@ export default function CategoryList() {
                     </div>
                 ))}
             </section>
-
             <Navbar />
         </section>
     );
 }
 
-function BrandCard({ title, img, onClick, theme }) {
+function BrandCard({ title, img, onClick, theme, isAll }) {
+    const isDark = theme === "dark";
     return (
         <button
             onClick={onClick}
-            className={`w-full rounded-xl py-4 flex flex-col items-center flex justify-center gap-2 active:scale-[0.98] shadow ${theme === "dark" ? "bg-[#23262b]" : "bg-white"}`}
+            className={`w-full rounded-2xl py-5 flex flex-col items-center justify-center gap-3 transition-all active:scale-[0.97] shadow-sm ${isDark ? "bg-[#141414] text-white/90" : "bg-white text-gray-900"}`}
         >
-            {img && <img src={img} className="w-16 h-16 object-contain" />}
-            <span className="text-sm font-bold  text-[#ff7643]">{title}</span>
+            {img ? (
+                <img src={img} className={`w-10 h-10 object-contain ${isDark ? "brightness-200" : ""}`} alt={title} />
+            ) : isAll ? (
+                <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#ff7643]/10">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff7643" strokeWidth="2.5">
+                        <path d="M4 12h16m-8-8v16" />
+                    </svg>
+                </div>
+            ) : null}
+            <span className={`text-xs font-bold ${isAll ? "text-[#ff7643]" : ""}`}>{title}</span>
         </button>
     );
 }
 
 function SkeletonCard({ theme }) {
     return (
-        <div className={`w-full h-[140px] rounded-xl animate-pulse ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`} />
+        <div className={`w-full h-[120px] rounded-2xl animate-pulse ${theme === "dark" ? "bg-white/[0.05]" : "bg-black/[0.05]"}`} />
     );
 }

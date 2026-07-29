@@ -1,5 +1,7 @@
 "use client";
+
 import MainHeader from "@/base/mainHeader";
+import { useTheme } from "@/context/ThemeContext";
 
 const LocationIcon = () => (
   <svg
@@ -42,32 +44,61 @@ const MailIcon = () => (
   </svg>
 );
 
-const InfoRow = ({ icon, children }) => (
-  <div className="flex items-start gap-3 p-3 rounded-xl bg-white/60 border border-orange-100 hover:border-[#ff7643]/40 transition-colors">
-    <div className="mt-0.5 shrink-0">{icon}</div>
-    <div className="text-sm text-gray-700 leading-relaxed">{children}</div>
-  </div>
-);
+const InfoRow = ({ icon, children, theme }) => {
+  const isDark = theme === "dark";
+
+  return (
+    <div
+      className={`flex items-start gap-3 p-3 rounded-xl border transition-colors ${
+        isDark
+          ? "bg-[#141414] border-[#23262B] hover:border-[#ff7643]/50"
+          : "bg-white/60 border-orange-100 hover:border-[#ff7643]/40"
+      }`}
+    >
+      <div className="mt-0.5 shrink-0">{icon}</div>
+      <div
+        className={`text-sm leading-relaxed ${
+          isDark ? "text-gray-200" : "text-gray-700"
+        }`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
 
 export default function ContactPage() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   return (
-    <div className="w-full max-w-[556px] mx-auto flex flex-col">
+    <div
+      className={`w-full max-w-[556px] mx-auto flex flex-col min-h-screen ${
+        isDark ? "bg-[#000]" : "bg-white"
+      }`}
+    >
       <MainHeader />
       <section
         dir="rtl"
-        className="w-full max-w-[556px] mx-auto px-4 flex flex-col gap-8"
+        className={`w-full max-w-[556px] mx-auto px-4 flex flex-col gap-8 ${
+          isDark ? "bg-[#000]" : "bg-white"
+        }`}
       >
         <div className="flex flex-col gap-3">
-          <InfoRow icon={<LocationIcon />}>
+          <InfoRow icon={<LocationIcon />} theme={theme}>
             شعبه یک: تهران، خیابان حافظ، خیابان غزالی، تقاطع پارس، برج پارس،
             پلاک ۱۵، طبقه اول، واحد ۶
           </InfoRow>
-          <InfoRow icon={<LocationIcon />}>
+          <InfoRow icon={<LocationIcon />} theme={theme}>
             شعبه دو: میدان آیت‌الله طالقانی، برج اکسیژن، طبقه هفتم، واحد ۷۰۳،
             پلاک ۹۹
           </InfoRow>
-          <InfoRow icon={<PhoneIcon />}>۰۵۱-۴۴۶۷۲۷۲۹ || ۰۹۱۲۰۹۸۳۴۲۲</InfoRow>
-          <InfoRow icon={<MailIcon />}>کد پستی: ۹۶۱۷۶۹۷۹۵۸</InfoRow>
+          <InfoRow icon={<PhoneIcon />} theme={theme}>
+            ۰۵۱-۴۴۶۷۲۷۲۹ || ۰۹۱۲۰۹۸۳۴۲۲
+          </InfoRow>
+          <InfoRow icon={<MailIcon />} theme={theme}>
+            کد پستی: ۹۶۱۷۶۹۷۹۵۸
+          </InfoRow>
         </div>
       </section>
     </div>

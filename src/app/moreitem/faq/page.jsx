@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MainHeader from "@/base/mainHeader";
+import { useTheme } from "@/context/ThemeContext";
 
 const categories = [
   { id: "login-register", label: "ورود و ثبت نام" },
@@ -50,7 +51,7 @@ const faqs = [
         a: "بله، ارسال سریع در تهران ظرف ۴ ساعت انجام می‌شود.",
       },
       {
-        q: "ارسال با ماهکس چطور است؟",
+        q: "ارسال با ماهکس چطور است? ",
         a: "کالا را روز بعد تحویل می‌گیرید. امکان پیگیری آنلاین وجود دارد.",
       },
       {
@@ -155,18 +156,23 @@ const faqs = [
   },
 ];
 
-
-
-function AccordionItem({ q, a }) {
+function AccordionItem({ q, a, theme }) {
   const [open, setOpen] = useState(false);
+  const isDark = theme === "dark";
 
   return (
-    <div className="border-b border-gray-100 last:border-0">
+    <div
+      className={`border-b last:border-0 ${isDark ? "border-[#23262B]" : "border-gray-100"}`}
+    >
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center justify-between gap-2 w-full py-3 text-right"
       >
-        <span className="text-sm text-gray-800 font-medium flex-1">{q}</span>
+        <span
+          className={`text-sm font-medium flex-1 ${isDark ? "text-gray-100" : "text-gray-800"}`}
+        >
+          {q}
+        </span>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.25 }}
@@ -197,7 +203,9 @@ function AccordionItem({ q, a }) {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             style={{ overflow: "hidden" }}
           >
-            <p className="text-sm text-gray-500 pb-3 pr-1 leading-relaxed">
+            <p
+              className={`text-sm pb-3 pr-1 leading-relaxed ${isDark ? "text-gray-400" : "text-gray-500"}`}
+            >
               {a}
             </p>
           </motion.div>
@@ -208,29 +216,33 @@ function AccordionItem({ q, a }) {
 }
 
 export default function FaqPage() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [activeTab, setActiveTab] = useState(categories[0].id);
   const tabRefs = useRef({});
 
   function handleTabClick(id) {
     setActiveTab(id);
-    // اسکرول tab فعال به مرکز نوار
     tabRefs.current[id]?.scrollIntoView({
       behavior: "smooth",
       block: "nearest",
       inline: "center",
     });
-    // اسکرول صفحه به section
     document
       .getElementById(id)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
-    <div className="w-full max-w-[556px] mx-auto flex flex-col min-h-screen">
+    <div
+      className={`w-full max-w-[556px] mx-auto flex flex-col min-h-screen ${isDark ? "bg-[#000]" : "bg-white"}`}
+    >
       <MainHeader />
 
       {/* Tabs */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-100 shadow-sm">
+      <div
+        className={`sticky top-0 z-10 border-b shadow-sm ${isDark ? "bg-[#000] border-[#23262B]" : "bg-white border-gray-100"}`}
+      >
         <div
           dir="rtl"
           className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-hide"
@@ -272,9 +284,11 @@ export default function FaqPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05, duration: 0.35 }}
-            className="bg-white rounded-2xl shadow-sm p-4"
+            className={`rounded-2xl shadow-sm p-4 ${isDark ? "bg-[#141414]" : "bg-white"}`}
           >
-            <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <h2
+              className={`text-base font-bold mb-3 flex items-center gap-2 ${isDark ? "text-white" : "text-gray-900"}`}
+            >
               <span
                 className="w-1 h-5 rounded-full inline-block"
                 style={{ background: "#ff7643" }}
@@ -283,7 +297,7 @@ export default function FaqPage() {
             </h2>
             <div>
               {section.items.map((item, j) => (
-                <AccordionItem key={j} q={item.q} a={item.a} />
+                <AccordionItem key={j} q={item.q} a={item.a} theme={theme} />
               ))}
             </div>
           </motion.div>
