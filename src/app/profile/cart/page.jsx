@@ -1,3 +1,4 @@
+// CartPage.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,7 +17,7 @@ function CartItemSkeleton() {
       <div className="relative z-10 h-full">
         <div
           dir="ltr"
-          className={`flex justify-start items-center rounded-3xl shadow-[0_8px_16px_rgba(0,11,36,0.04)] px-2 animate-pulse`}
+          className="flex justify-start items-center rounded-3xl shadow-[0_8px_16px_rgba(0,11,36,0.04)] px-2 animate-pulse"
           style={{ minHeight: "120px", width: "100%", backgroundColor: bg }}
         >
           <div className="flex-shrink-0 w-[28%] sm:w-[20%] md:w-[20%]">
@@ -47,6 +48,15 @@ export default function CartPage() {
   const [items, setItems] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingIds, setLoadingIds] = useState(new Set());
+
+  const setItemLoading = (id, val) => {
+    setLoadingIds((prev) => {
+      const next = new Set(prev);
+      val ? next.add(id) : next.delete(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -57,7 +67,6 @@ export default function CartPage() {
           const mappedItems = await Promise.all(
             cartData.cart_items.map(async (item) => {
               try {
-                console.log(item);
                 const prodRes = await api.get(
                   `https://api.manmarket.ir/product/v1/product/${item.product_slug}/`,
                 );
@@ -83,7 +92,7 @@ export default function CartPage() {
                     prodData.specifications.find((s) =>
                       s.name.includes("حافظه داخلی"),
                     )?.value || "",
-                  colorName: colorName,
+                  colorName,
                   price: parseInt(colorInv?.price || item.price),
                   stock: colorInv?.stock || 0,
                   count: item.quantity,
@@ -120,8 +129,10 @@ export default function CartPage() {
 
   const increase = async (itemId) => {
     const item = items.find((p) => p.id === itemId);
-    if (!item || item.count >= item.stock) return;
+    if (!item || item.count >= item.stock || loadingIds.has(itemId)) return;
+
     const newCount = item.count + 1;
+    setItemLoading(itemId, true);
     try {
       await api.patch(`/cart/v1/cart/update-product/${itemId}/`, {
         quantity: newCount,
@@ -129,17 +140,23 @@ export default function CartPage() {
       setItems((prev) =>
         prev.map((p) => (p.id === itemId ? { ...p, count: newCount } : p)),
       );
-    } catch {}
+    } catch {
+    } finally {
+      setItemLoading(itemId, false);
+    }
   };
 
   const decrease = async (itemId) => {
     const item = items.find((p) => p.id === itemId);
-    if (!item) return;
-    const newCount = item.count - 1;
-    if (newCount === 0) {
-      removeItem(itemId);
+    if (!item || loadingIds.has(itemId)) return;
+
+    if (item.count === 1) {
+      await removeItem(itemId);
       return;
     }
+
+    const newCount = item.count - 1;
+    setItemLoading(itemId, true);
     try {
       await api.patch(`/cart/v1/cart/update-product/${itemId}/`, {
         quantity: newCount,
@@ -147,22 +164,30 @@ export default function CartPage() {
       setItems((prev) =>
         prev.map((p) => (p.id === itemId ? { ...p, count: newCount } : p)),
       );
-    } catch {}
+    } catch {
+    } finally {
+      setItemLoading(itemId, false);
+    }
   };
 
   const removeItem = async (itemId) => {
+    if (loadingIds.has(itemId)) return;
+    setItemLoading(itemId, true);
     try {
       await api.delete(`/cart/v1/cart/delete-product/${itemId}/`);
-    } catch {}
-    setItems((prev) => prev.filter((p) => p.id !== itemId));
+      setItems((prev) => prev.filter((p) => p.id !== itemId));
+      setActiveId(null);
+    } catch {
+    } finally {
+      setItemLoading(itemId, false);
+    }
   };
 
-  const handleStartproductping = () =>
-    console.log("Start productping clicked!");
   const totalPrice = items.reduce(
     (acc, item) => acc + item.price * item.count,
     0,
   );
+
   const cardBg = theme === "dark" ? "#23262B" : "#ffffff";
   const shadow =
     theme === "dark" ? "shadow-none" : "shadow-[0_8px_16px_rgba(0,11,36,0.04)]";
@@ -208,12 +233,10 @@ export default function CartPage() {
                 />
               </svg>
               <h2 className="text-[18px] font-bold mb-3">
-                {" "}
                 در سبد خرید شما محصولی وجود ندارد
               </h2>
               <Link
                 href="/"
-                onClick={handleStartproductping}
                 className="bg-[#ff7643] hover:bg-[#ff5e2b] transition text-white px-10 py-3 rounded-full text-[13px]"
               >
                 دیدن از سایت
@@ -222,6 +245,8 @@ export default function CartPage() {
           ) : (
             items.map((p) => {
               const isActive = activeId === p.id;
+              const isItemLoading = loadingIds.has(p.id);
+
               return (
                 <div
                   key={p.id}
@@ -230,21 +255,31 @@ export default function CartPage() {
                 >
                   <button
                     onClick={() => removeItem(p.id)}
-                    className={`absolute top-1/2 -translate-y-1/2 right-3 w-24 h-24 rounded-3xl bg-[#EF5350] flex items-center justify-center z-0 transition-all duration-300 ease-out ${isActive ? "opacity-100" : "opacity-0"}`}
+                    disabled={isItemLoading}
+                    className={`absolute top-1/2 -translate-y-1/2 right-3 w-24 h-24 rounded-3xl bg-[#EF5350] flex items-center justify-center z-0 transition-all duration-300 ease-out disabled:opacity-50 ${
+                      isActive ? "opacity-100" : "opacity-0"
+                    }`}
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24">
-                      <path
-                        d="M6 7h12M9 7v12M15 7v12M8 4h8"
-                        stroke="#fff"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    {isItemLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <svg width="24" height="24" viewBox="0 0 24 24">
+                        <path
+                          d="M6 7h12M9 7v12M15 7v12M8 4h8"
+                          stroke="#fff"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
                   </button>
+
                   <div
                     onClick={() => setActiveId(isActive ? null : p.id)}
-                    className={`relative z-10 h-full transition-transform duration-500 ease-in-out ${isActive ? "-translate-x-20" : "translate-x-0"}`}
+                    className={`relative z-10 h-full transition-transform duration-500 ease-in-out ${
+                      isActive ? "-translate-x-20" : "translate-x-0"
+                    }`}
                   >
                     <div
                       dir="ltr"
@@ -262,66 +297,75 @@ export default function CartPage() {
                           alt={p.name}
                         />
                       </div>
+
                       <div
                         className={`flex flex-col justify-start text-[12px] space-y-2 flex-1 px-2 overflow-hidden ${textColor}`}
                       >
                         <span className="line-clamp-2">{p.name}</span>
                         <div className="flex flex-wrap justify-between items-center gap-2">
                           <div className="flex justify-center gap-2">
-                            <div className="gap-2 flex text-nowrap">
-                            
-                            </div>
+                            <div className="gap-2 flex text-nowrap" />
                           </div>
                           <div>
                             <button
                               type="button"
-                              className={`px-4 py-1 rounded-full text-[13px] transition border-2 cursor-default ${
-                                true
-                                  ? "border-[#ff7643] text-[#ff7643] font-medium"
-                                  : "border-[#ededed] text-[#757575]"
-                              }`}
+                              className="px-4 py-1 rounded-full text-[13px] transition border-2 cursor-default border-[#ff7643] text-[#ff7643] font-medium"
                             >
                               {p.colorName}
                             </button>
                           </div>
                         </div>
                       </div>
+
                       <div className="flex flex-col items-center justify-between h-[80px] mx-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             increase(p.id);
                           }}
-                          disabled={p.count === p.stock || p.stock === 0}
+                          disabled={
+                            p.count >= p.stock || p.stock === 0 || isItemLoading
+                          }
                           className="w-6 h-6 rounded-full bg-[#FF7643] flex items-center justify-center disabled:opacity-30"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24">
-                            <path
-                              d="M12 5v14M5 12h14"
-                              stroke="white"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
+                          {isItemLoading ? (
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24">
+                              <path
+                                d="M12 5v14M5 12h14"
+                                stroke="white"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          )}
                         </button>
+
                         <span className="text-[#FF7643] text-[13px] font-medium">
                           {p.count}
                         </span>
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             decrease(p.id);
                           }}
-                          className="w-6 h-6 rounded-full border border-[#FF7643] flex items-center justify-center"
+                          disabled={isItemLoading}
+                          className="w-6 h-6 rounded-full border border-[#FF7643] flex items-center justify-center disabled:opacity-30"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24">
-                            <path
-                              d="M5 12h14"
-                              stroke="#FF7643"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
+                          {isItemLoading ? (
+                            <div className="w-3 h-3 border-2 border-[#FF7643] border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24">
+                              <path
+                                d="M5 12h14"
+                                stroke="#FF7643"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -331,9 +375,12 @@ export default function CartPage() {
             })
           )}
         </main>
+
         <div className="flex justify-center items-center px-4">
           <div
-            className={`w-full max-w-[556px] sticky bottom-0 rounded-3xl z-50 px-1 pt-3 ${theme === "dark" ? "bg-[#23262B]" : "bg-[#fff7f4]"}`}
+            className={`w-full max-w-[556px] sticky bottom-0 rounded-3xl z-50 px-1 pt-3 ${
+              theme === "dark" ? "bg-[#23262B]" : "bg-[#fff7f4]"
+            }`}
           >
             <CartFooter
               total={totalPrice.toLocaleString("fa-IR")}

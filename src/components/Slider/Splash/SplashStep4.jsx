@@ -16,7 +16,7 @@ export default function SplashStep4() {
         <div className="w-full min-h-screen flex justify-center">
             <div className="relative w-full max-w-[550px] h-[100vh] overflow-hidden">
                 <div className="absolute top-[35%] left-1/2 -translate-x-1/2 bg-[#ff7643] rounded-2xl">
-                    <div className="p-5 rounded-3xl flex flex-col items-center justify-center drop-shadow-lg">
+                    <div className="p-10 rounded-3xl flex flex-col items-center justify-center drop-shadow-lg">
                         <Image
                             src="/logo.png"
                             alt="لوگو Man Market"

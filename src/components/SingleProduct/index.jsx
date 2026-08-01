@@ -30,7 +30,6 @@ export default function SingleProduct({ product }) {
     error: null,
   });
 
-  // انتخاب رنگ با کمترین قیمت (به جز 0)
   useEffect(() => {
     if (colors.length > 0) {
       let minPriceIndex = 0;
@@ -49,9 +48,9 @@ export default function SingleProduct({ product }) {
   const activeColorId = colors[selectedColor]?.color?.id;
   const selectedColorInventory = colors[selectedColor];
   const stock = selectedColorInventory?.stock || 0;
-  const selectedPrice = colors[selectedColor]?.price;
+  const selectedPrice = Number(colors[selectedColor]?.price) || 0;
+  const discountPercent = colors[selectedColor]?.discount_percent || 0;
 
-  // ریست کردن cartState وقتی رنگ عوض میشه
   useEffect(() => {
     setCartState({
       stage: "preview",
@@ -62,7 +61,6 @@ export default function SingleProduct({ product }) {
     });
   }, [selectedColor]);
 
-  // چک کردن سبد خرید برای رنگ انتخاب‌شده
   useEffect(() => {
     const checkCart = async () => {
       if (
@@ -174,9 +172,7 @@ export default function SingleProduct({ product }) {
       try {
         await api.patch(
           `/cart/v1/cart/update-product/${cartState.cartItemId}/`,
-          {
-            quantity: newQuantity,
-          },
+          { quantity: newQuantity },
         );
         setCartState((prev) => ({
           ...prev,
@@ -206,9 +202,7 @@ export default function SingleProduct({ product }) {
       try {
         await api.patch(
           `/cart/v1/cart/update-product/${cartState.cartItemId}/`,
-          {
-            quantity: newQuantity,
-          },
+          { quantity: newQuantity },
         );
         setCartState((prev) => ({
           ...prev,
@@ -313,6 +307,7 @@ export default function SingleProduct({ product }) {
         liked={liked}
         onLike={() => setLiked(!liked)}
         selectedPrice={selectedPrice}
+        discountPercent={discountPercent}
         onAddReview={(text) =>
           setReviews((prev) => [...prev, { description: text }])
         }
