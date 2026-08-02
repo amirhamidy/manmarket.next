@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import ProductColors from "./ProductColors";
@@ -61,47 +61,53 @@ export default function SingleProduct({ product }) {
     });
   }, [selectedColor]);
 
-  useEffect(() => {
-    const checkCart = async () => {
-      if (
-        !accessToken ||
-        !product.id ||
-        !activeColorId ||
-        !selectedColorInventory?.id
-      )
-        return;
+  const syncWithServer = useCallback(async () => {
+    if (!accessToken || !product.id || !activeColorId || !selectedColorInventory?.id) return;
 
-      try {
-        const res = await api.get("/cart/v1/cart/");
-        if (res.status >= 200 && res.status < 300) {
-          const existingItem = res.data.cart_items.find(
-            (item) =>
-              item.product === Number(product.id) &&
-              item.color_inventory === Number(selectedColorInventory.id),
-          );
-          if (existingItem) {
-            setCartState({
-              stage: "added",
-              quantity: existingItem.quantity,
-              cartItemId: existingItem.id,
-              loading: false,
-              error: null,
-            });
-          } else {
-            setCartState((prev) => ({
-              ...prev,
-              stage: "preview",
-              cartItemId: null,
-            }));
-          }
+    try {
+      const res = await api.get("/cart/v1/cart/");
+      if (res.status >= 200 && res.status < 300) {
+        const existingItem = res.data.cart_items.find(
+          (item) =>
+            item.product === Number(product.id) &&
+            item.color_inventory === Number(selectedColorInventory.id),
+        );
+        if (existingItem) {
+          setCartState({
+            stage: "added",
+            quantity: existingItem.quantity,
+            cartItemId: existingItem.id,
+            loading: false,
+            error: null,
+          });
+        } else {
+          setCartState({
+            stage: "preview",
+            quantity: 1,
+            cartItemId: null,
+            loading: false,
+            error: null,
+          });
         }
-      } catch (err) {
-        console.error("Error checking cart", err);
+      }
+    } catch (err) {
+      console.error("Error syncing cart", err);
+    }
+  }, [api, accessToken, product.id, activeColorId, selectedColorInventory]);
+
+  useEffect(() => {
+    syncWithServer();
+  }, [syncWithServer]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncWithServer();
       }
     };
-
-    checkCart();
-  }, [api, accessToken, product.id, activeColorId, selectedColorInventory]);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [syncWithServer]);
 
   const productImages = useMemo(() => {
     if (!activeColorId) return product.product_images?.map((i) => i.file) || [];
@@ -141,19 +147,43 @@ export default function SingleProduct({ product }) {
       quantity: cartState.quantity,
     };
 
+    const minLoadingMs = 1000;
+    const startTime = Date.now();
+
     try {
       const res = await api.post("/cart/v1/cart/add-product/", payload);
       if (res.status >= 200 && res.status < 300) {
-        setCartState({
-          stage: "added",
-          quantity: cartState.quantity,
-          cartItemId: res.data.id,
-          loading: false,
-          error: null,
-        });
+        const verifyRes = await api.get("/cart/v1/cart/");
+        const serverItem = verifyRes.data.cart_items?.find(
+          (item) =>
+            item.product === Number(product.id) &&
+            item.color_inventory === Number(selectedColorInventory.id),
+        );
+
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, minLoadingMs - elapsed);
+
+        await new Promise((r) => setTimeout(r, remaining));
+
+        if (serverItem) {
+          setCartState({
+            stage: "added",
+            quantity: serverItem.quantity,
+            cartItemId: serverItem.id,
+            loading: false,
+            error: null,
+          });
+        } else {
+          setCartState((prev) => ({ ...prev, loading: false }));
+        }
+      } else {
+        setCartState((prev) => ({ ...prev, loading: false }));
       }
     } catch (error) {
       console.error("CART ERROR:", error);
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, minLoadingMs - elapsed);
+      await new Promise((r) => setTimeout(r, remaining));
       setCartState((prev) => ({
         ...prev,
         loading: false,
@@ -163,7 +193,7 @@ export default function SingleProduct({ product }) {
   };
 
   const handleIncrease = async () => {
-    if (cartState.quantity >= stock) return;
+    if (cartState.quantity >= stock || cartState.loading) return;
 
     const newQuantity = cartState.quantity + 1;
     setCartState((prev) => ({ ...prev, loading: true }));
@@ -174,11 +204,27 @@ export default function SingleProduct({ product }) {
           `/cart/v1/cart/update-product/${cartState.cartItemId}/`,
           { quantity: newQuantity },
         );
-        setCartState((prev) => ({
-          ...prev,
-          quantity: newQuantity,
-          loading: false,
-        }));
+
+        const verifyRes = await api.get("/cart/v1/cart/");
+        const serverItem = verifyRes.data.cart_items?.find(
+          (item) => item.id === cartState.cartItemId,
+        );
+
+        if (serverItem && serverItem.quantity === newQuantity) {
+          setCartState((prev) => ({
+            ...prev,
+            quantity: serverItem.quantity,
+            loading: false,
+          }));
+        } else if (serverItem) {
+          setCartState((prev) => ({
+            ...prev,
+            quantity: serverItem.quantity,
+            loading: false,
+          }));
+        } else {
+          setCartState((prev) => ({ ...prev, loading: false }));
+        }
       } catch (error) {
         console.error("Error updating quantity:", error);
         setCartState((prev) => ({ ...prev, loading: false }));
@@ -193,7 +239,7 @@ export default function SingleProduct({ product }) {
   };
 
   const handleDecrease = async () => {
-    if (cartState.quantity <= 1) return;
+    if (cartState.quantity <= 1 || cartState.loading) return;
 
     const newQuantity = cartState.quantity - 1;
     setCartState((prev) => ({ ...prev, loading: true }));
@@ -204,11 +250,21 @@ export default function SingleProduct({ product }) {
           `/cart/v1/cart/update-product/${cartState.cartItemId}/`,
           { quantity: newQuantity },
         );
-        setCartState((prev) => ({
-          ...prev,
-          quantity: newQuantity,
-          loading: false,
-        }));
+
+        const verifyRes = await api.get("/cart/v1/cart/");
+        const serverItem = verifyRes.data.cart_items?.find(
+          (item) => item.id === cartState.cartItemId,
+        );
+
+        if (serverItem) {
+          setCartState((prev) => ({
+            ...prev,
+            quantity: serverItem.quantity,
+            loading: false,
+          }));
+        } else {
+          setCartState((prev) => ({ ...prev, loading: false }));
+        }
       } catch (error) {
         console.error("Error updating quantity:", error);
         setCartState((prev) => ({ ...prev, loading: false }));
@@ -223,6 +279,7 @@ export default function SingleProduct({ product }) {
   };
 
   const handleDelete = async () => {
+    if (cartState.loading) return;
     setCartState((prev) => ({ ...prev, loading: true }));
 
     if (cartState.stage === "added" && cartState.cartItemId) {
@@ -230,13 +287,23 @@ export default function SingleProduct({ product }) {
         await api.delete(
           `/cart/v1/cart/delete-product/${cartState.cartItemId}/`,
         );
-        setCartState({
-          stage: "preview",
-          quantity: 1,
-          cartItemId: null,
-          loading: false,
-          error: null,
-        });
+
+        const verifyRes = await api.get("/cart/v1/cart/");
+        const stillExists = verifyRes.data.cart_items?.find(
+          (item) => item.id === cartState.cartItemId,
+        );
+
+        if (!stillExists) {
+          setCartState({
+            stage: "preview",
+            quantity: 1,
+            cartItemId: null,
+            loading: false,
+            error: null,
+          });
+        } else {
+          setCartState((prev) => ({ ...prev, loading: false }));
+        }
       } catch (error) {
         console.error("Error deleting item:", error);
         setCartState((prev) => ({ ...prev, loading: false }));

@@ -230,7 +230,7 @@ export default function ProductActions({
 
   const handleReviewOpen = () => {
     if (!accessToken) {
-      triggerToast("برای ارسال نظر باید ورود / ثبت‌نام کنید");
+      triggerToast("برای ارسال نظر باید ورود / ثبت‌ نام کنید");
       return;
     }
     setIsReviewOpen(true);
