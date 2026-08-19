@@ -8,58 +8,84 @@ import "swiper/css";
 import CategoryCard from "./CategoryCard";
 import RightIcon from "../icons/rightIcon";
 
-export default function CategoryCarousel({ lightCategories, darkCategories }) {
-    const { theme } = useTheme();
-    const [loading, setLoading] = useState(true);
+const BASE_URL = "https://api.manmarket.ir";
 
-    useEffect(() => {
-        const t = setTimeout(() => setLoading(false), 1000);
-        return () => clearTimeout(t);
-    }, []);
+export default function CategoryCarousel() {
+  const { theme } = useTheme();
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const categories = theme === "dark" ? darkCategories : lightCategories;
+  useEffect(() => {
+    const fetchMegaMenu = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/product/v1/mega-menu/`);
+        const data = await res.json();
 
-    return (
-        <>
-            <div className="flex justify-between max-w-full h-6 px-4 mt-4 text-[#ff7643] font-bold">
-                <span className="text-[13px]">دسته بندی ها</span>
-                <Link href="category" className="flex items-center">
-                    <span className="text-[13px] mx-1">دیدن همه</span>
-                    <span className="rotate-180">
-                        <RightIcon />
-                    </span>
-                </Link>
-            </div>
+        const seen = new Set();
+        const unique = [];
+        data.forEach((item) => {
+          const cat = item.category;
+          if (!seen.has(cat.slug)) {
+            seen.add(cat.slug);
+            unique.push({
+              slug: cat.slug,
+              name: cat.title,
+              image: cat.image ? `${BASE_URL}${cat.image}` : null,
+            });
+          }
+        });
 
-            <div className="w-full mt-2">
-                {loading ? (
-                    <div className="flex gap-4 py-4 px-3.5">
-                        {Array.from({ length: 8 }).map((_, i) => (
-                            <div
-                                key={i}
-                                className={`shrink-0 w-16 h-16 rounded-xl animate-pulse ${theme === "dark"
-                                        ? "bg-[#23262B]"
-                                        : "bg-[#fff7f4]"
-                                    }`}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <Swiper
-                        slidesPerView="auto"
-                        spaceBetween={16}
-                        resistanceRatio={0}
-                        grabCursor
-                        className="px-3.5 py-4"
-                    >
-                        {categories.map((cat) => (
-                            <SwiperSlide key={cat.name} className="!w-auto">
-                                <CategoryCard category={cat} />
-                            </SwiperSlide>
-                        ))}
-                    </Swiper>
-                )}
-            </div>
-        </>
-    );
+        setCategories(unique);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMegaMenu();
+  }, []);
+
+  return (
+    <>
+      <div className="flex justify-between max-w-full h-6 px-4 mt-4 text-[#ff7643] font-bold">
+        <span className="text-[13px]">دسته بندی ها</span>
+        <Link href="category" className="flex items-center">
+          <span className="text-[13px] mx-1">دیدن همه</span>
+          <span className="rotate-180">
+            <RightIcon />
+          </span>
+        </Link>
+      </div>
+
+      <div className="w-full mt-2">
+        {loading ? (
+          <div className="flex gap-4 py-4 px-3.5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className={`shrink-0 w-16 h-16 rounded-xl animate-pulse ${
+                  theme === "dark" ? "bg-[#23262B]" : "bg-[#fff7f4]"
+                }`}
+              />
+            ))}
+          </div>
+        ) : (
+          <Swiper
+            slidesPerView="auto"
+            spaceBetween={16}
+            resistanceRatio={0}
+            grabCursor
+            className="px-3.5 py-4"
+          >
+            {categories.map((cat) => (
+              <SwiperSlide key={cat.slug} className="!w-auto">
+                <CategoryCard category={cat} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        )}
+      </div>
+    </>
+  );
 }

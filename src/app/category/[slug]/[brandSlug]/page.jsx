@@ -13,67 +13,9 @@ import ProductCard from "@/components/homeComponents/ProductCard";
 import Navbar from "@/base/navbar";
 import { useTheme } from "@/context/ThemeContext";
 
-const lightCategories = [
-  { name: "موبایل", img: "/assets/img/mobile.svg", slug: "phone" },
-  { name: "تبلت", img: "/assets/img/tablet.svg", slug: "tablet" },
-  { name: "لپ تاپ", img: "/assets/img/laptop.svg", slug: "laptop" },
-  { name: "مانیتور", img: "/assets/img/monitor.svg", slug: "monitor" },
-  { name: "کنسول بازی", img: "/assets/img/game.svg", slug: "game-console" },
-  { name: "اسپیکر", img: "/assets/img/speaker.svg", slug: "speaker" },
-  {
-    name: "هدفون",
-    img: "/assets/img/headphone.svg",
-    slug: "headset-headphones",
-  },
-  {
-    name: "ساعت هوشمند",
-    img: "/assets/img/applewatch.svg",
-    slug: "smartwatch",
-  },
-];
-
-const darkCategories = lightCategories.map((c) => ({
-  ...c,
-  img: c.img.replace("/assets/img/", "/assets/img/dark-category/"),
-}));
-
-const categoryBrandMapping = {
-  phone: [
-    "apple",
-    "samsung",
-    "xiaomi",
-    "huawei",
-    "honor",
-    "nokia",
-    "realme",
-    "tecno",
-    "nothing-phone",
-    "htc",
-    "lg",
-    "motorola",
-    "blackview",
-    "doogee",
-  ],
-  tablet: ["apple", "samsung", "xiaomi", "huawei", "lenovo"],
-  laptop: [
-    "apple",
-    "asus",
-    "acer",
-    "lenovo",
-    "hp",
-    "msi",
-    "dell",
-    "xiaomi",
-    "huawei",
-  ],
-  monitor: ["asus", "acer", "lenovo", "msi", "hp", "dell"],
-  "game-console": ["sony", "microsoft"],
-  speaker: ["jbl", "sony", "anker", "harman-kardon", "lg"],
-  "headset-headphones": ["jbl", "sony", "anker", "apple", "beats", "qcy"],
-  smartwatch: ["apple", "samsung", "xiaomi", "huawei", "mibro", "haylou"],
-};
-
 const BASE_URL = "https://api.manmarket.ir/product/v1";
+const MEDIA_URL = "https://api.manmarket.ir";
+const MEGA_MENU_URL = "https://api.manmarket.ir/product/v1/mega-menu/";
 
 const overlayVariants = {
   hidden: { opacity: 0 },
@@ -92,6 +34,12 @@ const dropdownVariants = {
   exit: { opacity: 0, scale: 0.97, y: 8, transition: { duration: 0.15 } },
 };
 
+const getImageUrl = (path) => {
+  if (!path || path === "") return null;
+  if (path.startsWith("http")) return path;
+  return `${MEDIA_URL}${path}`;
+};
+
 export default function CategoryBrandPage() {
   const { theme } = useTheme();
   const router = useRouter();
@@ -101,12 +49,8 @@ export default function CategoryBrandPage() {
   const categorySlug = segments[2] || "phone";
   const brandSlug = segments[3] || null;
 
-  const [selectedCategory, setSelectedCategory] = useState(
-    () =>
-      lightCategories.find((c) => c.slug === categorySlug) ??
-      lightCategories[0],
-  );
-  const [allBrands, setAllBrands] = useState([]);
+  const [megaMenu, setMegaMenu] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [products, setProducts] = useState([]);
   const [hasMore, setHasMore] = useState(false);
@@ -182,24 +126,32 @@ export default function CategoryBrandPage() {
   }, []);
 
   const isProductUnavailable = useCallback(
-    (product) => {
-      const price = getProductPrice(product);
-      return price === 0;
-    },
+    (product) => getProductPrice(product) === 0,
     [getProductPrice],
   );
 
-  const getFilteredBrands = useCallback(() => {
-    const allowedSlugs = categoryBrandMapping[selectedCategory.slug] || [];
-    return allBrands.filter(
-      (brand) =>
-        allowedSlugs.includes(brand.slug) &&
-        brand.image !== null &&
-        brand.image !== "",
-    );
-  }, [allBrands, selectedCategory.slug]);
+  const categories = useMemo(() => {
+    const seen = new Set();
+    return megaMenu
+      .map((item) => item.category)
+      .filter((cat) => {
+        if (seen.has(cat.slug)) return false;
+        seen.add(cat.slug);
+        return true;
+      });
+  }, [megaMenu]);
 
-  const filteredBrands = getFilteredBrands();
+  const filteredBrands = useMemo(() => {
+    if (!selectedCategory) return [];
+    return megaMenu
+      .filter(
+        (item) =>
+          item.category.slug === selectedCategory.slug &&
+          item.brand.image !== null &&
+          item.brand.image !== "",
+      )
+      .map((item) => item.brand);
+  }, [megaMenu, selectedCategory]);
 
   useEffect(() => {
     AOS.init({ duration: 400, once: true, easing: "ease-out-cubic" });
@@ -211,29 +163,31 @@ export default function CategoryBrandPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const fetchAllBrands = async () => {
+    const fetchMegaMenu = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/brand/`);
+        const res = await fetch(MEGA_MENU_URL);
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (cancelled) return;
-        const filtered = Array.isArray(data)
-          ? data.filter((b) => b?.image !== null && b?.image !== "")
-          : [];
-        setAllBrands(filtered);
+        setMegaMenu(Array.isArray(data) ? data : []);
       } catch {
-        if (!cancelled) {
-          setAllBrands([]);
-        }
+        if (!cancelled) setMegaMenu([]);
       }
     };
-    fetchAllBrands();
+    fetchMegaMenu();
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
+    if (!categories.length) return;
+    const found = categories.find((c) => c.slug === categorySlug);
+    setSelectedCategory(found ?? categories[0]);
+  }, [categories, categorySlug]);
+
+  useEffect(() => {
+    if (!selectedCategory) return;
     if (brandSlug && filteredBrands.length > 0) {
       const foundBrand = filteredBrands.find((b) => b.slug === brandSlug);
       setSelectedBrand(foundBrand ?? null);
@@ -243,7 +197,7 @@ export default function CategoryBrandPage() {
     } else {
       setSelectedBrand(null);
     }
-  }, [filteredBrands, brandSlug, selectedCategory.slug, router]);
+  }, [filteredBrands, brandSlug, selectedCategory, router]);
 
   const fetchProducts = useCallback(
     async (catSlug, brSlug, nextPage, sortOpt = sortOption) => {
@@ -252,11 +206,8 @@ export default function CategoryBrandPage() {
       try {
         let url = `${BASE_URL}/product/?category=${catSlug}&page=${nextPage}`;
         if (brSlug) url += `&brand=${brSlug}`;
-
         const sortParam = getSortParam(sortOpt);
-        if (sortParam) {
-          url += `&ordering=${sortParam}`;
-        }
+        if (sortParam) url += `&ordering=${sortParam}`;
 
         const res = await fetch(url);
         if (!res.ok) throw new Error();
@@ -266,7 +217,6 @@ export default function CategoryBrandPage() {
         const nextLink = Array.isArray(data)
           ? null
           : (data?.links?.next ?? null);
-
         const sortedResults = sortProductsClient(results, sortOpt);
 
         setProducts((prev) =>
@@ -298,6 +248,7 @@ export default function CategoryBrandPage() {
   );
 
   useEffect(() => {
+    if (!selectedCategory) return;
     setProducts([]);
     pageRef.current = 1;
     setHasMore(false);
@@ -311,7 +262,7 @@ export default function CategoryBrandPage() {
       1,
       sortOption,
     );
-  }, [selectedCategory.slug, selectedBrand?.slug, sortOption, fetchProducts]);
+  }, [selectedCategory?.slug, selectedBrand?.slug, sortOption, fetchProducts]);
 
   useEffect(() => {
     if (!loaderRef.current) return;
@@ -320,7 +271,7 @@ export default function CategoryBrandPage() {
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
           fetchProducts(
-            selectedCategory.slug,
+            selectedCategory?.slug,
             selectedBrand?.slug ?? null,
             pageRef.current + 1,
             sortOption,
@@ -334,7 +285,7 @@ export default function CategoryBrandPage() {
   }, [
     hasMore,
     loading,
-    selectedCategory.slug,
+    selectedCategory?.slug,
     selectedBrand?.slug,
     sortOption,
     fetchProducts,
@@ -365,33 +316,26 @@ export default function CategoryBrandPage() {
 
   const filteredProducts = useMemo(() => {
     if (!products.length) return [];
-
     const available = [];
     const unavailable = [];
-
     products.forEach((product) => {
       const price = getProductPrice(product);
       if (price > 0) {
-        if (price >= priceRange[0] && price <= priceRange[1]) {
+        if (price >= priceRange[0] && price <= priceRange[1])
           available.push(product);
-        }
       } else {
         unavailable.push(product);
       }
     });
-
     let result = showUnavailable ? [...available, ...unavailable] : available;
-
     const uniqueProducts = [];
     const seenIds = new Set();
-
     result.forEach((product) => {
       if (!seenIds.has(product.id)) {
         seenIds.add(product.id);
         uniqueProducts.push(product);
       }
     });
-
     return sortProductsClient(uniqueProducts, sortOption);
   }, [
     products,
@@ -403,7 +347,7 @@ export default function CategoryBrandPage() {
   ]);
 
   const handleCategorySelect = (cat) => {
-    if (cat.slug === selectedCategory.slug) {
+    if (cat.slug === selectedCategory?.slug) {
       setIsModalOpen(false);
       setModalType(null);
       return;
@@ -426,9 +370,7 @@ export default function CategoryBrandPage() {
     setSelectedBrand(brand);
     setIsModalOpen(false);
     setModalType(null);
-    if (brand) {
-      router.push(`/category/${selectedCategory.slug}/${brand.slug}`);
-    }
+    if (brand) router.push(`/category/${selectedCategory?.slug}/${brand.slug}`);
   };
 
   const handleClearBrand = () => {
@@ -436,14 +378,13 @@ export default function CategoryBrandPage() {
     setSelectedBrand(null);
     setIsModalOpen(false);
     setModalType(null);
-    router.push(`/category/${selectedCategory.slug}`);
+    router.push(`/category/${selectedCategory?.slug}`);
   };
 
   const handlePriceThumb = (index, val) => {
     const max = dynamicMaxPrice || 0;
     const next = [...tempRange];
-    const roundedValue = Math.round(Number(val) / 500000) * 500000;
-    const value = roundedValue;
+    const value = Math.round(Number(val) / 500000) * 500000;
     if (index === 0) {
       next[0] = Math.min(value, Math.max(0, next[1] - 1));
     } else {
@@ -474,7 +415,6 @@ export default function CategoryBrandPage() {
     setModalType(null);
   };
 
-  const categories = theme === "dark" ? darkCategories : lightCategories;
   const isDark = theme === "dark";
 
   const isAnyFilterLoading =
@@ -490,21 +430,32 @@ export default function CategoryBrandPage() {
       case "category":
         return (
           <div className="grid grid-cols-4 gap-3">
-            {categories.map((cat) => (
-              <motion.button
-                key={cat.slug}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleCategorySelect(cat)}
-                className={`flex flex-col items-center gap-2 py-3 px-2 rounded-2xl transition-opacity duration-200 ${
-                  selectedCategory.slug === cat.slug
-                    ? "opacity-100"
-                    : "opacity-45 hover:opacity-60"
-                }`}
-              >
-                <img src={cat.img} className="w-20 h-20" alt="" />
-                <span className="text-[10px]">{cat.name}</span>
-              </motion.button>
-            ))}
+            {categories.map((cat) => {
+              const imgUrl = getImageUrl(cat.image);
+              return (
+                <motion.button
+                  key={cat.slug}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleCategorySelect(cat)}
+                  className={`flex flex-col items-center gap-2 py-3 px-2 rounded-2xl transition-opacity duration-200 ${
+                    selectedCategory?.slug === cat.slug
+                      ? "opacity-100"
+                      : "opacity-45 hover:opacity-60"
+                  }`}
+                >
+                  {imgUrl ? (
+                    <img
+                      src={imgUrl}
+                      className="w-20 h-20 object-contain"
+                      alt=""
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl bg-gray-200 dark:bg-gray-700" />
+                  )}
+                  <span className="text-[10px]">{cat.title}</span>
+                </motion.button>
+              );
+            })}
           </div>
         );
 
@@ -520,25 +471,32 @@ export default function CategoryBrandPage() {
             >
               همه برندها
             </motion.button>
-            {filteredBrands.map((brand) => (
-              <motion.button
-                key={brand.id}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleBrandSelect(brand)}
-                className={`flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-2xl transition-opacity duration-200 ${
-                  brand.slug === selectedBrand?.slug
-                    ? "opacity-100"
-                    : "opacity-40 hover:opacity-60"
-                }`}
-              >
-                <img
-                  src={brand.image}
-                  className={`w-9 h-9 object-contain ${isDark ? "brightness invert" : ""}`}
-                  alt=""
-                />
-                <span className="text-[10px] font-medium">{brand.name}</span>
-              </motion.button>
-            ))}
+            {filteredBrands.map((brand) => {
+              const imgUrl = getImageUrl(brand.image);
+              return (
+                <motion.button
+                  key={brand.id}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleBrandSelect(brand)}
+                  className={`flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-2xl transition-opacity duration-200 ${
+                    brand.slug === selectedBrand?.slug
+                      ? "opacity-100"
+                      : "opacity-40 hover:opacity-60"
+                  }`}
+                >
+                  {imgUrl ? (
+                    <img
+                      src={imgUrl}
+                      className={`w-9 h-9 object-contain ${isDark ? "brightness-0 invert" : ""}`}
+                      alt=""
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700" />
+                  )}
+                  <span className="text-[10px] font-medium">{brand.title}</span>
+                </motion.button>
+              );
+            })}
           </div>
         );
 
@@ -609,7 +567,7 @@ export default function CategoryBrandPage() {
               className="w-full h-12 bg-[#ff7643] text-white rounded-2xl text-xs font-bold flex items-center justify-center"
             >
               {priceLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 "اعمال فیلتر"
               )}
@@ -669,9 +627,7 @@ export default function CategoryBrandPage() {
           spaceBetween={8}
           slidesPerView="auto"
           freeMode={true}
-          mousewheel={{
-            forceToAxis: true,
-          }}
+          mousewheel={{ forceToAxis: true }}
           className="!overflow-visible"
           dir="rtl"
         >
@@ -679,16 +635,10 @@ export default function CategoryBrandPage() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => openModal("category")}
-              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-1 whitespace-nowrap min-w-[70px] justify-center ${
-                true
-                  ? "bg-[#ff7643] text-white "
-                  : isDark
-                    ? "bg-white/[0.06] text-white/80 hover:bg-white/[0.12]"
-                    : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
-              }`}
+              className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-1 whitespace-nowrap min-w-[70px] justify-center bg-[#ff7643] text-white`}
             >
               {categoryLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <svg
@@ -707,7 +657,7 @@ export default function CategoryBrandPage() {
                     <rect x="14" y="14" width="7" height="7" rx="1" />
                   </svg>
                   <span>دسته‌بندی</span>:
-                  <span className=" ">{selectedCategory.name}</span>
+                  <span>{selectedCategory?.title ?? ""}</span>
                 </>
               )}
             </motion.button>
@@ -719,14 +669,14 @@ export default function CategoryBrandPage() {
               onClick={() => openModal("brand")}
               className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap min-w-[70px] justify-center ${
                 selectedBrand
-                  ? "bg-[#ff7643] text-white "
+                  ? "bg-[#ff7643] text-white"
                   : isDark
                     ? "bg-white/[0.06] text-white/80 hover:bg-white/[0.12]"
                     : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
               }`}
             >
               {brandLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <svg
@@ -746,8 +696,8 @@ export default function CategoryBrandPage() {
                     <path d="M4 20L20 20" />
                   </svg>
                   <span>برند</span>
-                  <span className="text-[9px] ">
-                    {selectedBrand ? selectedBrand.name : ""}
+                  <span className="text-[9px]">
+                    {selectedBrand ? selectedBrand.title : ""}
                   </span>
                 </>
               )}
@@ -760,14 +710,14 @@ export default function CategoryBrandPage() {
               onClick={() => openModal("price")}
               className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap min-w-[70px] justify-center ${
                 priceDirty
-                  ? "bg-[#ff7643] text-white "
+                  ? "bg-[#ff7643] text-white"
                   : isDark
                     ? "bg-white/[0.06] text-white/80 hover:bg-white/[0.12]"
                     : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
               }`}
             >
               {priceLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <svg
@@ -805,14 +755,14 @@ export default function CategoryBrandPage() {
               onClick={() => openModal("sort")}
               className={`px-3 py-2.5 rounded-xl text-[11px] font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap min-w-[70px] justify-center ${
                 sortOption !== "default"
-                  ? "bg-[#ff7643] text-white "
+                  ? "bg-[#ff7643] text-white"
                   : isDark
                     ? "bg-white/[0.06] text-white/80 hover:bg-white/[0.12]"
                     : "bg-black/[0.04] text-gray-700 hover:bg-black/[0.08]"
               }`}
             >
               {sortLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <svg
@@ -830,7 +780,7 @@ export default function CategoryBrandPage() {
                     <polyline points="6 7 10 3 14 3 18 7" />
                   </svg>
                   <span>مرتب‌سازی</span>:
-                  <span className="">
+                  <span>
                     {sortOptions.find((s) => s.value === sortOption)?.label}
                   </span>
                 </>
@@ -855,7 +805,7 @@ export default function CategoryBrandPage() {
               }`}
             >
               {toggleLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <svg
