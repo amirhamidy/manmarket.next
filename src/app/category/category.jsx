@@ -151,8 +151,7 @@ function BrandCard({ title, img, onClick, theme, isAll }) {
             viewBox="0 0 24 24"
             fill="none"
             stroke="#ff7643"
-            strokeWidth="2.5"
-          >
+            strokeWidth="2.5">
             <path d="M4 12h16m-8-8v16" />
           </svg>
         </div>
