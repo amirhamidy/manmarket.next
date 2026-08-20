@@ -67,7 +67,7 @@ export default function CheckoutSummary() {
             </div>
 
             <div className="flex justify-between gap-1">
-                <span className="text-[#ff7643]">هزینه بسته بندی و ارسال :</span>
+                <span className="text-[#ff7643]">هزینه بسته بندی ارسال :</span>
                 <span className="text-[#757575] flex items-center gap-1">
                     {formatPrice(shippingCost)}
                     {PriceIcon && <PriceIcon />}
