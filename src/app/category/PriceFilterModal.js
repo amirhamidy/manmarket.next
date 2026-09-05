@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const overlayVariants = {
@@ -17,7 +17,12 @@ const dropdownVariants = {
     y: 0,
     transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
   },
-  exit: { opacity: 0, scale: 0.97, y: 8, transition: { duration: 0.15 } },
+  exit: {
+    opacity: 0,
+    scale: 0.97,
+    y: 8,
+    transition: { duration: 0.15 },
+  },
 };
 
 export default function PriceFilterModal({
@@ -36,15 +41,20 @@ export default function PriceFilterModal({
 
   const handleMinChange = (e) => {
     const value = Math.min(Number(e.target.value), tempRange[1] - 1);
+
     setTempRange([value, tempRange[1]]);
   };
 
   const handleMaxChange = (e) => {
     const value = Math.max(Number(e.target.value), tempRange[0] + 1);
+
     setTempRange([tempRange[0], value]);
   };
 
   if (!isOpen) return null;
+
+  const minPercent = (tempRange[0] / maxPrice) * 100;
+  const maxPercent = (tempRange[1] / maxPrice) * 100;
 
   return (
     <>
@@ -56,6 +66,7 @@ export default function PriceFilterModal({
         onClick={onClose}
         className="fixed inset-0 z-[60] backdrop-blur-sm bg-black/30"
       />
+
       <motion.div
         variants={dropdownVariants}
         initial="hidden"
@@ -69,10 +80,13 @@ export default function PriceFilterModal({
       >
         <div className="flex justify-between items-center mb-8">
           <span
-            className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+            className={`text-sm font-bold ${
+              isDark ? "text-white" : "text-gray-900"
+            }`}
           >
             فیلتر قیمت
           </span>
+
           <button
             onClick={onClose}
             className="opacity-50 hover:opacity-100 transition-opacity"
@@ -90,15 +104,20 @@ export default function PriceFilterModal({
           </button>
         </div>
 
-        <div className="relative w-full h-12 flex items-center justify-center mb-10">
+        <div
+          className="relative w-full h-12 flex items-center justify-center mb-10"
+          dir="rtl"
+        >
           <div
-            className={`absolute w-full h-1.5 rounded-full ${isDark ? "bg-white/10" : "bg-black/5"}`}
+            className={`absolute w-full h-1.5 rounded-full ${
+              isDark ? "bg-white/10" : "bg-black/5"
+            }`}
           >
             <div
               className="absolute h-full bg-[#ff7643] rounded-full"
               style={{
-                left: `${(tempRange[0] / maxPrice) * 100}%`,
-                right: `${100 - (tempRange[1] / maxPrice) * 100}%`,
+                left: `${100 - maxPercent}%`,
+                right: `${100 - minPercent}%`,
               }}
             />
           </div>
@@ -109,6 +128,7 @@ export default function PriceFilterModal({
             max={maxPrice}
             value={tempRange[0]}
             onChange={handleMinChange}
+            dir="rtl"
             className="absolute w-full h-1.5 bg-transparent appearance-none pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#ff7643] [&::-webkit-slider-thumb]:shadow-lg"
           />
 
@@ -118,6 +138,7 @@ export default function PriceFilterModal({
             max={maxPrice}
             value={tempRange[1]}
             onChange={handleMaxChange}
+            dir="rtl"
             className="absolute w-full h-1.5 bg-transparent appearance-none pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#ff7643] [&::-webkit-slider-thumb]:shadow-lg"
           />
         </div>
@@ -125,16 +146,23 @@ export default function PriceFilterModal({
         <div className="flex gap-4 mb-8">
           <div className="flex-1 flex flex-col gap-1.5">
             <span className="text-[10px] opacity-50 px-2">از (تومان)</span>
+
             <div
-              className={`h-11 rounded-xl flex items-center px-4 text-xs font-medium ${isDark ? "bg-white/5" : "bg-black/5"}`}
+              className={`h-11 rounded-xl flex items-center px-4 text-xs font-medium ${
+                isDark ? "bg-white/5" : "bg-black/5"
+              }`}
             >
               {tempRange[0].toLocaleString()}
             </div>
           </div>
+
           <div className="flex-1 flex flex-col gap-1.5">
             <span className="text-[10px] opacity-50 px-2">تا (تومان)</span>
+
             <div
-              className={`h-11 rounded-xl flex items-center px-4 text-xs font-medium ${isDark ? "bg-white/5" : "bg-black/5"}`}
+              className={`h-11 rounded-xl flex items-center px-4 text-xs font-medium ${
+                isDark ? "bg-white/5" : "bg-black/5"
+              }`}
             >
               {tempRange[1].toLocaleString()}
             </div>
